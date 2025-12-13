@@ -1,0 +1,66 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="d-flex flex-column justify-content-center min-vh-75">
+
+    <div class="text-center mb-5">
+        <h2 class="fw-bold">Boshqaruv Paneli</h2>
+        <p class="text-muted">Do'koningizni boshqaring</p>
+    </div>
+
+    <div class="row g-3">
+        <div class="col-6">
+            <a href="{% url 'create_debt' %}" class="btn-menu bg-primary text-white">
+                <i class="fa-solid fa-cart-plus fa-2x mb-2"></i>
+                <span>Nasiya Yozish</span>
+            </a>
+        </div>
+
+        <div class="col-6">
+            <a href="{% url 'dashboard' %}" class="btn-menu bg-success text-white">
+                <i class="fa-solid fa-users fa-2x mb-2"></i>
+                <span>Qarzdorlar</span>
+            </a>
+        </div>
+
+        <div class="col-6">
+            <a href="{% url 'create_payment' %}" class="btn-menu bg-warning text-dark">
+                <i class="fa-solid fa-hand-holding-dollar fa-2x mb-2"></i>
+                <span>To'lov Olish</span>
+            </a>
+        </div>
+
+        <div class="col-6">
+            <a href="{% url 'settings' %}" class="btn-menu bg-secondary text-white">
+                <i class="fa-solid fa-gear fa-2x mb-2"></i>
+                <span>Sozlamalar</span>
+            </a>
+        </div>
+    </div>
+
+</div>
+
+<style>
+    .btn-menu {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        padding: 20px;
+        border-radius: 20px;
+        text-decoration: none;
+        height: 140px;
+        transition: transform 0.2s;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+    }
+
+    .btn-menu:active {
+        transform: scale(0.95);
+    }
+
+    .btn-menu span {
+        font-weight: 600;
+        font-size: 0.9rem;
+    }
+</style>
+{% endblock %}

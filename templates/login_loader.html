@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="uz">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kirish...</title>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <style>
+        body {
+            background-color: var(--tg-theme-bg-color, #fff);
+            color: var(--tg-theme-text-color, #000);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            font-family: sans-serif;
+            flex-direction: column;
+        }
+
+        .loader {
+            border: 5px solid #f3f3f3;
+            border-top: 5px solid #3498db;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            animation: spin 1s linear infinite;
+            margin-bottom: 20px;
+        }
+
+        @keyframes spin {
+            0% {
+                transform: rotate(0deg);
+            }
+
+            100% {
+                transform: rotate(360deg);
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="loader"></div>
+    <h3 id="statusText">Tizimga kirilmoqda...</h3>
+
+    <script>
+        window.Telegram.WebApp.expand();
+
+        // 1. Telegram ID ni olish
+        const tg = window.Telegram.WebApp;
+        const user = tg.initDataUnsafe.user;
+
+        if (user) {
+            // 2. Serverga yuborish
+            fetch('/auth/telegram-login/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ telegram_id: user.id })
+            })
+                .then(response => response.json()) // JSON qilib o'qiymiz
+                .then(data => {
+                    if (data.status === 'ok') {
+                        // Server qayerga buyursa, o'sha yoqqa ketamiz (/ yoki /my-cabinet/)
+                        window.location.href = data.redirect_url;
+                    } else {
+                        document.getElementById('statusText').innerText = "❌ " + (data.msg || "Ruxsat yo'q");
+                        document.getElementById('statusText').style.color = "red";
+                        document.querySelector('.loader').style.display = 'none';
+                    }
+                })
+                .catch(err => {
+                    console.error(err);
+                    document.getElementById('statusText').innerText = "Xatolik yuz berdi.";
+                });
+        } else {
+            // Agar Telegramdan tashqarida ochilsa
+            document.getElementById('statusText').innerText = "Iltimos, Telegram orqali kiring.";
+            document.querySelector('.loader').style.display = 'none';
+
+            // Test uchun vaqtincha login sahifasiga yo'naltiramiz
+            setTimeout(() => {
+                window.location.href = "/admin/login/";
+            }, 2000);
+        }
+    </script>
+</body>
+
+</html>

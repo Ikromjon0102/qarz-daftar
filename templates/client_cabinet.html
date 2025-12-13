@@ -1,0 +1,178 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="d-flex align-items-center mb-4 pt-2">
+    <div class="bg-primary bg-opacity-10 text-primary rounded-circle d-flex align-items-center justify-content-center me-3"
+        style="width: 50px; height: 50px;">
+        <i class="fa-solid fa-user fa-lg"></i>
+    </div>
+    <div>
+        <small class="text-muted">Xush kelibsiz,</small>
+        <h5 class="fw-bold m-0">{{ client.full_name }}</h5>
+    </div>
+</div>
+
+<div class="app-card text-white mb-4 shadow-lg position-relative overflow-hidden"
+    style="background: linear-gradient(135deg, #ff416c, #ff4b2b); border: none; border-radius: 16px; padding: 20px;">
+
+    <i class="fa-solid fa-wallet position-absolute"
+        style="right: -20px; bottom: -20px; font-size: 120px; opacity: 0.15;"></i>
+
+    <h6 class="opacity-75 mb-3">Sizning joriy qarzingiz:</h6>
+
+    <div class="d-flex flex-column">
+        {% if total_uzs > 0 %}
+        <h3 class="fw-bold mb-0">{{ total_uzs|floatformat:0 }} so'm</h3>
+        {% endif %}
+
+        {% if total_usd > 0 %}
+        <h4 class="fw-bold mb-0 mt-1 text-warning" style="text-shadow: 0 1px 2px rgba(0,0,0,0.2);">
+            ${{ total_usd|floatformat:2 }}</h4>
+        {% endif %}
+
+        {% if total_uzs == 0 and total_usd == 0 %}
+        <h3 class="fw-bold mb-0">0 so'm</h3>
+        <small class="opacity-75 mt-1">Qarzingiz yo'q, halolsiz! 👍</small>
+        {% endif %}
+    </div>
+</div>
+
+<div class="d-flex justify-content-between align-items-center px-2 mb-3">
+    <span class="text-muted small fw-bold"><i class="fa-regular fa-calendar"></i> Shu oydagi xaridlar:</span>
+    <div class="text-end">
+        {% if month_uzs > 0 %}
+        <span class="badge bg-secondary bg-opacity-10 text-dark border">{{ month_uzs|floatformat:0 }} so'm</span>
+        {% endif %}
+        {% if month_usd > 0 %}
+        <span class="badge bg-success bg-opacity-10 text-success border border-success">
+            ${{ month_usd|floatformat:0 }}</span>
+        {% endif %}
+        {% if month_uzs == 0 and month_usd == 0 %}
+        <span class="text-muted small">Xarid yo'q</span>
+        {% endif %}
+    </div>
+</div>
+
+<hr class="text-muted opacity-25">
+
+<h6 class="fw-bold mb-3 ps-1"><i class="fa-solid fa-clock-rotate-left"></i> Oxirgi operatsiyalar</h6>
+
+<div class="pb-5">
+    {% for debt in debts %}
+    <div class="app-card mb-2 py-3 px-3 border-0 shadow-sm bg-white rounded-3"
+        style="cursor: pointer; transition: transform 0.1s;" data-date="{{ debt.created_at|date:'d.m.Y' }}"
+        data-items="{{ debt.items }}" data-uzs="{{ debt.amount_uzs|floatformat:0 }}"
+        data-usd="{{ debt.amount_usd|floatformat:2 }}" onclick="showDetail(this)">
+
+        <div class="d-flex justify-content-between align-items-center">
+
+            <div style="flex: 1; min-width: 0;">
+                <div class="d-flex align-items-center mb-1">
+                    <span class="badge bg-light text-muted me-2" style="font-size: 0.7rem;">
+                        {{ debt.created_at|date:"d.m" }}</span>
+                    <small class="text-muted" style="font-size: 0.75rem;">{{ debt.created_at|date:"H:i" }}</small>
+                </div>
+                <div class="fw-bold text-dark text-truncate">
+                    {{ debt.items|truncatechars:28 }}
+                </div>
+            </div>
+
+            <div class="text-end ms-3 d-flex align-items-center">
+                <div>
+                    {% if debt.amount_uzs > 0 %}
+                    <div class="fw-bold text-danger small">-{{ debt.amount_uzs|floatformat:0 }}</div>
+                    {% endif %}
+                    {% if debt.amount_usd > 0 %}
+                    <div class="fw-bold text-danger small">-${{ debt.amount_usd|floatformat:2 }}</div>
+                    {% endif %}
+                </div>
+                <i class="fa-solid fa-chevron-right text-muted ms-2" style="font-size: 0.8rem;"></i>
+            </div>
+        </div>
+    </div>
+    {% empty %}
+    <div class="text-center text-muted py-5">
+        <i class="fa-solid fa-basket-shopping fa-3x mb-3 opacity-25"></i>
+        <p>Hozircha tarix bo'sh</p>
+    </div>
+    {% endfor %}
+</div>
+
+<div class="modal fade" id="detailModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-sm">
+        <div class="modal-content rounded-4 border-0 shadow">
+
+            <div class="modal-header border-0 pb-0 justify-content-center">
+                <h5 class="modal-title fw-bold" id="modalDate"></h5>
+            </div>
+
+            <div class="modal-body text-center">
+                <div class="my-3">
+                    <i class="fa-solid fa-receipt fa-3x text-primary opacity-50"></i>
+                </div>
+
+                <div class="p-3 bg-light rounded-3 mb-3 text-start">
+                    <h6 class="text-muted small text-uppercase mb-2 border-bottom pb-1">Xarid qilingan tovarlar:</h6>
+                    <p id="modalItems" class="fw-bold mb-0 text-dark"
+                        style="white-space: pre-wrap; font-size: 0.95rem; line-height: 1.5;"></p>
+                </div>
+
+                <div class="text-center">
+                    <small class="text-muted">Ushbu xarid qiymati:</small>
+                    <h4 class="fw-bold text-danger mt-1" id="modalSum"></h4>
+                </div>
+            </div>
+
+            <div class="modal-footer border-0 pt-0 justify-content-center pb-4">
+                <button type="button" class="btn btn-secondary w-50 rounded-pill"
+                    data-bs-dismiss="modal">Yopish</button>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+<script>
+    function showDetail(element) {
+        // 1. Bosilgan elementdan ma'lumotlarni o'qiymiz
+        const date = element.getAttribute('data-date');
+        const items = element.getAttribute('data-items');
+        const sumUzs = element.getAttribute('data-uzs');
+        const sumUsd = element.getAttribute('data-usd');
+
+        // 2. Modal ichiga joylaymiz
+        document.getElementById('modalDate').innerText = date;
+        document.getElementById('modalItems').innerText = items;
+
+        // 3. Summani formatlash
+        let totalText = "";
+
+        // Agar raqam '0' yoki bo'sh bo'lmasa, qo'shamiz
+        if (sumUzs && sumUzs !== '0') {
+            totalText += sumUzs + " so'm";
+        }
+
+        // Agar dollar bo'lsa
+        if (sumUsd && sumUsd !== '0,00' && sumUsd !== '0.00') {
+            if (totalText) totalText += " + ";
+            totalText += "$" + sumUsd;
+        }
+
+        document.getElementById('modalSum').innerText = totalText;
+
+        // 4. Modalni ochamiz
+        try {
+            var myModal = new bootstrap.Modal(document.getElementById('detailModal'));
+            myModal.show();
+        } catch (e) {
+            console.error("Bootstrap modal xatosi:", e);
+            alert("Modal ochishda xatolik bo'ldi.");
+        }
+    }
+</script>
+{% endblock %}

@@ -1,0 +1,190 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<style>
+    /* Dark Mode Fix */
+    body {
+        background-color: var(--tg-theme-bg-color, #fff);
+        color: var(--tg-theme-text-color, #000);
+    }
+
+    .form-control,
+    .form-select {
+        background-color: var(--tg-theme-secondary-bg-color, #f0f0f0) !important;
+        color: var(--tg-theme-text-color, #000) !important;
+        border: 1px solid var(--tg-theme-hint-color, #ccc);
+        border-radius: 12px;
+    }
+
+    .form-control:focus,
+    .form-select:focus {
+        background-color: var(--tg-theme-bg-color, #fff) !important;
+        border-color: var(--tg-theme-button-color, #3390ec);
+        box-shadow: none;
+    }
+
+    .app-card {
+        background-color: var(--tg-theme-secondary-bg-color, #ffffff);
+        border-radius: 14px;
+        padding: 15px;
+        margin-bottom: 15px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+    }
+
+    .summary-card {
+        background-color: var(--tg-theme-bg-color);
+        border: 2px dashed var(--tg-theme-button-color);
+        border-radius: 14px;
+        padding: 15px;
+        margin-top: 20px;
+    }
+
+    .btn-trash {
+        color: #ff5c5c;
+        background: transparent;
+        border: none;
+    }
+</style>
+
+<h4 class="mb-3 fw-bold ps-1">Nasiya Yozish</h4>
+
+<form method="POST" id="debtForm" autocomplete="off">
+    {% csrf_token %}
+
+    <div class="app-card">
+        <label class="small text-muted mb-1">Mijozni tanlang yoki yozing</label>
+
+        <input class="form-control form-control-lg fw-bold text-primary" list="clientOptions" id="clientDataList"
+            placeholder="Ismni yozing..." onchange="setClientId(this)"
+            value="{% if selected_client %}{{ selected_client.full_name }} ({{ selected_client.phone }}){% endif %}"
+            required>
+
+        <input type="hidden" name="client_id" id="hiddenClientId"
+            value="{% if selected_client %}{{ selected_client.id }}{% endif %}" required>
+
+        <datalist id="clientOptions">
+    {% for client in clients %}
+        <option data-value="{{ client.id }}"
+                value="{{ client.full_name }} ({{ client.phone }}) {% if client.telegram_id %}✅{% else %}📵{% endif %}">
+        </option>
+    {% endfor %}
+</datalist>
+    </div>
+
+    <div id="items-container">
+    </div>
+
+    <button type="button" class="btn btn-outline-primary w-100 py-3 mb-3"
+        style="border-radius: 12px; border-style: dashed;" onclick="addItem()">
+        <i class="fa-solid fa-plus"></i> Yana qo'shish
+    </button>
+
+    <div class="summary-card mb-4">
+        <div class="d-flex justify-content-between align-items-center mb-1">
+            <span class="text-muted">Jami So'm:</span>
+            <h5 class="fw-bold m-0" id="totalUzsDisplay">0 so'm</h5>
+        </div>
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <span class="text-muted">Jami Dollar:</span>
+            <h5 class="fw-bold m-0 text-success" id="totalUsdDisplay">$0</h5>
+        </div>
+
+        <input type="hidden" name="total_uzs" id="hiddenTotalUzs" value="0">
+        <input type="hidden" name="total_usd" id="hiddenTotalUsd" value="0">
+
+        <button type="submit" class="btn btn-primary w-100 py-3 fw-bold"
+            style="background-color: var(--tg-theme-button-color); border-radius: 12px;">
+            SAQLASH VA YUBORISH
+        </button>
+    </div>
+
+    <div style="height: 50px;"></div>
+</form>
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        addItem();
+    });
+
+    // Mijoz ID sini inputdan olish
+    function setClientId(inputElement) {
+        const list = document.getElementById('clientOptions');
+        const hiddenInput = document.getElementById('hiddenClientId');
+        let found = false;
+        for (let i = 0; i < list.options.length; i++) {
+            if (list.options[i].value === inputElement.value) {
+                hiddenInput.value = list.options[i].getAttribute('data-value');
+                found = true;
+                break;
+            }
+        }
+        if (!found) hiddenInput.value = ""; // Agar ro'yxatda yo'q bo'lsa tozalash
+    }
+
+    function addItem() {
+        const container = document.getElementById('items-container');
+        const count = container.children.length + 1;
+        const html = `
+        <div class="app-card item-row animate__animated animate__fadeIn position-relative">
+            <div class="d-flex justify-content-between align-items-center mb-2">
+                <span class="fw-bold small text-muted">Tovar #${count}</span>
+                <button type="button" class="btn-trash p-0" onclick="removeRow(this)"><i class="fa-solid fa-trash"></i></button>
+            </div>
+            <div class="mb-2">
+                <input type="text" name="item_name[]" class="form-control fw-bold" placeholder="Nomi (mas: Fara)" required>
+            </div>
+            <div class="row g-2">
+                <div class="col-4">
+                    <input type="tel" name="item_qty[]" class="form-control text-center qty-input" placeholder="Soni" oninput="calculateTotal()" required>
+                </div>
+                <div class="col-4">
+                    <input type="tel" name="item_price[]" class="form-control price-input" placeholder="Narxi" oninput="calculateTotal()" required>
+                </div>
+                <div class="col-4">
+                    <select name="item_currency[]" class="form-select currency-input fw-bold px-1" onchange="calculateTotal()">
+                        <option value="UZS">So'm</option>
+                        <option value="USD">$ Doll</option>
+                    </select>
+                </div>
+            </div>
+            <div class="text-end mt-1"><small class="text-muted row-total-text" style="font-size: 0.8rem;">0</small></div>
+        </div>`;
+        container.insertAdjacentHTML('beforeend', html);
+    }
+
+    function removeRow(btn) {
+        const container = document.getElementById('items-container');
+        if (container.children.length > 1) {
+            btn.closest('.item-row').remove();
+            calculateTotal();
+        }
+    }
+
+    function calculateTotal() {
+        let totalUzs = 0;
+        let totalUsd = 0;
+        document.querySelectorAll('.item-row').forEach(row => {
+            const qty = parseFloat(row.querySelector('.qty-input').value) || 0;
+            const price = parseFloat(row.querySelector('.price-input').value) || 0;
+            const currency = row.querySelector('.currency-input').value;
+            const totalTextDisplay = row.querySelector('.row-total-text');
+            let rowTotal = qty * price;
+
+            if (currency === 'USD') {
+                totalUsd += rowTotal;
+                totalTextDisplay.innerHTML = `<span class="text-success">$${rowTotal.toLocaleString()}</span>`;
+            } else {
+                totalUzs += rowTotal;
+                totalTextDisplay.innerHTML = `${rowTotal.toLocaleString()} so'm`;
+            }
+        });
+        document.getElementById('totalUzsDisplay').innerText = totalUzs.toLocaleString('uz-UZ') + " so'm";
+        document.getElementById('totalUsdDisplay').innerText = "$" + totalUsd.toLocaleString('en-US');
+        document.getElementById('hiddenTotalUzs').value = totalUzs;
+        document.getElementById('hiddenTotalUsd').value = totalUsd;
+    }
+</script>
+{% endblock %}

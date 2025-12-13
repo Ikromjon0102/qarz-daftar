@@ -1,0 +1,57 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<h4 class="fw-bold mb-4 ps-1"><i class="fa-solid fa-basket-shopping"></i> Sizning Savatingiz</h4>
+
+<div class="pb-5 mb-5">
+    {% for item in items %}
+    <div class="app-card d-flex justify-content-between align-items-center p-3 mb-2 bg-white shadow-sm rounded-3">
+        <div class="d-flex align-items-center">
+            {% if item.product.image %}
+                <img src="{{ item.product.image.url }}" class="rounded-3 me-3" style="width: 50px; height: 50px; object-fit: cover;">
+            {% else %}
+                <div class="bg-light rounded-3 me-3 d-flex align-items-center justify-content-center" style="width: 50px; height: 50px;">
+                    <i class="fa-solid fa-image text-muted"></i>
+                </div>
+            {% endif %}
+            
+            <div>
+                <h6 class="fw-bold mb-0 text-dark">{{ item.product.name }}</h6>
+                <small class="text-muted">{{ item.qty }} x {{ item.product.price|floatformat:0 }} = <b>{{ item.total|floatformat:0 }}</b></small>
+            </div>
+        </div>
+        
+        <button class="btn btn-link text-danger p-0"><i class="fa-solid fa-times"></i></button>
+    </div>
+    {% empty %}
+        <div class="text-center py-5">
+            <i class="fa-solid fa-cart-arrow-down fa-3x text-muted mb-3 opacity-25"></i>
+            <p class="text-muted">Savatingiz bo'sh</p>
+            <a href="{% url 'shop_home' %}" class="btn btn-outline-primary rounded-pill">Do'konga qaytish</a>
+        </div>
+    {% endfor %}
+</div>
+
+{% if items %}
+<div class="fixed-bottom bg-white p-3 border-top shadow-lg" style="border-top-left-radius: 20px; border-top-right-radius: 20px;">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <span class="text-muted">Jami to'lov:</span>
+        <h4 class="fw-bold text-primary m-0">{{ total_price|floatformat:0 }} so'm</h4>
+    </div>
+    
+    <div class="row g-2">
+        <div class="col-4">
+            <a href="{% url 'clear_cart' %}" class="btn btn-outline-danger w-100 py-3 rounded-3">
+                <i class="fa-solid fa-trash"></i>
+            </a>
+        </div>
+        <div class="col-8">
+            <a href="#" class="btn btn-primary w-100 py-3 rounded-3 fw-bold">
+                BUYURTMA BERISH <i class="fa-solid fa-arrow-right ms-2"></i>
+            </a>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+{% endblock %}

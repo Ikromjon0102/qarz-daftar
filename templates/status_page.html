@@ -1,0 +1,16 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="d-flex flex-column align-items-center justify-content-center" style="height: 80vh;">
+
+    <i class="fa-solid {{ icon }} fa-5x {{ color }} mb-4 animate__animated animate__bounceIn"></i>
+
+    <h2 class="fw-bold mb-3">{{ title }}</h2>
+    <p class="text-muted text-center px-4">{{ msg }}</p>
+
+    <a href="#" onclick="window.Telegram.WebApp.close()" class="btn btn-secondary mt-4 rounded-pill px-4">
+        Yopish
+    </a>
+
+</div>
+{% endblock %}

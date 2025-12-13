@@ -1,0 +1,122 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<style>
+    /* Yashil mavzu */
+    .input-group-text {
+        background-color: var(--tg-theme-secondary-bg-color, #f0f0f0);
+        color: var(--tg-theme-text-color, #000);
+        border: none;
+    }
+
+    .money-input {
+        font-size: 1.5rem;
+        font-weight: bold;
+        color: #198754;
+    }
+
+    .money-input::placeholder {
+        color: #ccc;
+        font-weight: normal;
+        font-size: 1.2rem;
+    }
+
+    /* Dark Mode Inputs */
+    .form-control {
+        background-color: var(--tg-theme-secondary-bg-color, #f0f0f0) !important;
+        color: var(--tg-theme-text-color, #000) !important;
+        border: none;
+    }
+</style>
+
+<h4 class="mb-4 fw-bold ps-1 text-success">
+    <i class="fa-solid fa-hand-holding-dollar"></i> To'lov Qabul Qilish
+</h4>
+
+<form method="POST" id="paymentForm" autocomplete="off">
+    {% csrf_token %}
+
+    <div class="app-card border border-success border-opacity-25 shadow-sm mb-4 bg-white"
+        style="border-radius: 14px; padding: 15px;">
+        <label class="small text-muted mb-2 text-uppercase fw-bold">Kim to'layapti?</label>
+
+        <div class="input-group input-group-lg">
+            <span class="input-group-text bg-transparent border-end-0 ps-0">
+                <i class="fa-solid fa-user text-success"></i>
+            </span>
+            <input class="form-control bg-transparent border-start-0 ps-2 fw-bold text-success" list="clientOptions"
+                id="clientDataList" placeholder="Mijoz ismini yozing..." onchange="setClientId(this)"
+                value="{% if selected_client %}{{ selected_client.full_name }} ({{ selected_client.phone }}){% endif %}"
+                required>
+        </div>
+
+        <input type="hidden" name="client_id" id="hiddenClientId"
+            value="{% if selected_client %}{{ selected_client.id }}{% endif %}" required>
+
+ <datalist id="clientOptions">
+    {% for client in clients %}
+        <option data-value="{{ client.id }}"
+                value="{{ client.full_name }} ({{ client.phone }}) {% if client.telegram_id %}✅{% else %}📵{% endif %}">
+        </option>
+    {% endfor %}
+</datalist>
+    </div>
+
+    <div class="app-card mb-4 bg-white" style="border-radius: 14px; padding: 15px;">
+        <label class="small text-muted mb-3 text-uppercase fw-bold">Qancha to'ladi?</label>
+
+        <div class="input-group mb-3">
+            <span class="input-group-text">UZS</span>
+            <input type="tel" name="amount_uzs" class="form-control money-input" placeholder="0">
+            <span class="input-group-text">so'm</span>
+        </div>
+
+        <div class="input-group">
+            <span class="input-group-text">USD</span>
+            <input type="tel" name="amount_usd" class="form-control money-input text-success" placeholder="0">
+            <span class="input-group-text">$</span>
+        </div>
+
+        <div class="form-text mt-2 text-muted small">
+            <i class="fa-solid fa-circle-info"></i> Qaysi valyutada to'lasa, o'shani to'ldiring.
+        </div>
+    </div>
+
+    <button type="submit" class="btn btn-success w-100 py-3 fw-bold shadow-lg" style="border-radius: 14px;">
+        <i class="fa-solid fa-check-double"></i> TO'LOVNI QABUL QILISH
+    </button>
+
+</form>
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+    function setClientId(inputElement) {
+        const list = document.getElementById('clientOptions');
+        const hiddenInput = document.getElementById('hiddenClientId');
+        let found = false;
+
+        for (let i = 0; i < list.options.length; i++) {
+            if (list.options[i].value === inputElement.value) {
+                hiddenInput.value = list.options[i].getAttribute('data-value');
+                found = true;
+                break;
+            }
+        }
+        if (!found) hiddenInput.value = "";
+    }
+
+    // Double Click himoyasi
+    document.getElementById('paymentForm').addEventListener('submit', function (e) {
+        if (!document.getElementById('hiddenClientId').value) {
+            e.preventDefault();
+            alert("Iltimos, ro'yxatdan mavjud mijozni tanlang!");
+            return;
+        }
+        const btn = this.querySelector('button[type="submit"]');
+        btn.disabled = true;
+        btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Saqlanmoqda...';
+    });
+</script>
+{% endblock %}

@@ -1,0 +1,102 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="d-flex flex-column align-items-center justify-content-center min-vh-75 mt-4">
+
+    <div class="receipt-card w-100 position-relative bg-white p-4 shadow-sm">
+        <div class="receipt-top-circles"></div>
+
+        <div class="text-center mb-3">
+            <i class="fa-solid fa-store fa-2x text-primary mb-2"></i>
+            <h5 class="fw-bold text-uppercase">Avto Ehtiyot Qismlar</h5>
+            <p class="text-muted small">{{ debt.created_at|date:"d.m.Y H:i" }}</p>
+        </div>
+
+        <hr class="dashed-line">
+
+        <div class="items-list mb-3">
+            <div class="d-flex justify-content-between mb-1">
+                <span class="fw-bold text-dark">{{ debt.items }}</span>
+            </div>
+        </div>
+
+        <hr class="dashed-line">
+
+        <div class="d-flex justify-content-between align-items-center mt-3">
+            <span class="text-muted fs-5">Jami qarz:</span>
+            <div class="text-end">
+                {% if debt.amount_uzs > 0 %}
+                <div class="fs-2 fw-bold text-dark">{{ debt.amount_uzs|floatformat:0 }} so'm</div>
+                {% endif %}
+
+                {% if debt.amount_usd > 0 %}
+                <div class="fs-2 fw-bold text-success">${{ debt.amount_usd|floatformat:2 }}</div>
+                {% endif %}
+            </div>
+        </div>
+
+        <div class="alert alert-warning mt-3 small text-center">
+            <i class="fa-solid fa-triangle-exclamation"></i>
+            Tasdiqlash tugmasini bosishingiz bilan ushbu summa sizning balansingizga qarz bo'lib yoziladi.
+        </div>
+    </div>
+
+    <form method="POST" class="w-100 mt-4 d-grid gap-2">
+        {% csrf_token %}
+        <button type="submit" name="action" value="confirm" class="btn btn-success btn-lg py-3 rounded-4 shadow">
+            <i class="fa-solid fa-check-circle"></i> TASDIQLAYMAN
+        </button>
+
+        <button type="submit" name="action" value="reject" class="btn btn-outline-danger py-3 rounded-4">
+            <i class="fa-solid fa-xmark"></i> Rad etaman
+        </button>
+    </form>
+
+</div>
+
+<style>
+    body {
+        background-color: #eee;
+        /* Orqa fon ajralib turishi uchun */
+    }
+
+    .receipt-card {
+        border-radius: 0;
+        clip-path: polygon(0 0, 100% 0, 100% 100%, 0 100%);
+        /* Zigzag uchun joy */
+        background: #fff;
+    }
+
+    /* Chekning tepadagi teshikchalari (visual effect) */
+    .receipt-card::before {
+        content: "";
+        position: absolute;
+        top: -10px;
+        left: 0;
+        width: 100%;
+        height: 20px;
+        background: radial-gradient(circle, #eee 6px, transparent 7px);
+        background-size: 20px 20px;
+        background-position: bottom;
+    }
+
+    /* Chek pastki qismi zig-zag */
+    .receipt-card::after {
+        content: "";
+        position: absolute;
+        bottom: -10px;
+        left: 0;
+        width: 100%;
+        height: 20px;
+        background: linear-gradient(45deg, transparent 33.333%, #fff 33.333%, #fff 66.667%, transparent 66.667%),
+            linear-gradient(-45deg, transparent 33.333%, #fff 33.333%, #fff 66.667%, transparent 66.667%);
+        background-size: 20px 40px;
+        background-position: 0 -20px;
+    }
+
+    .dashed-line {
+        border: none;
+        border-top: 2px dashed #ccc;
+    }
+</style>
+{% endblock %}

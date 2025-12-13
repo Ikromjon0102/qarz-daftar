@@ -1,0 +1,114 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-3 ps-1">
+    <h4 class="fw-bold m-0"><i class="fa-solid fa-chart-pie"></i> Umumiy Holat</h4>
+    <span class="badge bg-light text-dark border">{{ clients|length }} ta mijoz</span>
+</div>
+
+<h6 class="text-muted small text-uppercase fw-bold mb-2 ps-1">📊 Bu oylik ko'rsatkichlar</h6>
+
+<div class="row g-2 mb-2">
+    <div class="col-12">
+        <span class="badge bg-primary bg-opacity-10 text-primary border border-primary border-opacity-10">
+            📦 Nasiyaga sotildi (Tovar)
+        </span>
+    </div>
+    <div class="col-6">
+        <div class="p-3 bg-white rounded-3 shadow-sm border border-primary border-opacity-10">
+            <small class="text-muted d-block" style="font-size: 0.7rem;">So'mda</small>
+            <h5 class="fw-bold text-dark mb-0">{{ stats.sales_uzs|floatformat:0 }}</h5>
+        </div>
+    </div>
+    <div class="col-6">
+        <div class="p-3 bg-white rounded-3 shadow-sm border border-primary border-opacity-10">
+            <small class="text-muted d-block" style="font-size: 0.7rem;">Dollarda</small>
+            <h5 class="fw-bold text-dark mb-0">${{ stats.sales_usd|floatformat:0 }}</h5>
+        </div>
+    </div>
+</div>
+
+<div class="row g-2 mb-4">
+    <div class="col-12">
+        <span class="badge bg-success bg-opacity-10 text-success border border-success border-opacity-10">
+            💰 Undirildi (Naqd pul)
+        </span>
+    </div>
+    <div class="col-6">
+        <div class="p-3 bg-white rounded-3 shadow-sm border border-success border-opacity-25"
+            style="background-color: #f0fff4 !important;">
+            <small class="text-muted d-block" style="font-size: 0.7rem;">So'mda</small>
+            <h5 class="fw-bold text-success mb-0">+{{ stats.income_uzs|floatformat:0 }}</h5>
+        </div>
+    </div>
+    <div class="col-6">
+        <div class="p-3 bg-white rounded-3 shadow-sm border border-success border-opacity-25"
+            style="background-color: #f0fff4 !important;">
+            <small class="text-muted d-block" style="font-size: 0.7rem;">Dollarda</small>
+            <h5 class="fw-bold text-success mb-0">+$ {{ stats.income_usd|floatformat:0 }}</h5>
+        </div>
+    </div>
+</div>
+
+<hr class="text-muted opacity-25">
+
+<h6 class="text-muted small text-uppercase fw-bold mb-3 ps-1">👤 Mijozlar balansi</h6>
+
+<div class="pb-5"> {% for client in clients %}
+    <div class="col-12 mb-2">
+        <div class="app-card d-flex justify-content-between align-items-center py-3 px-3 shadow-sm bg-white rounded-3 border-0"
+            style="cursor: pointer; transition: transform 0.1s;" data-url="{% url 'admin_client_detail' client.id %}"
+            onclick="location.href=this.getAttribute('data-url')">
+            <div>
+                <h6 class="fw-bold mb-1 text-dark">{{ client.full_name }}</h6>
+                <small class="text-muted"><i class="fa-solid fa-phone" style="font-size: 0.7rem;"></i>
+                    {{ client.phone }}</small>
+            </div>
+
+            <div class="text-end">
+
+                {% if client.total_debt_uzs %}
+                {% if client.total_debt_uzs > 0 %}
+                <div class="fw-bold text-danger">{{ client.total_debt_uzs|floatformat:0 }} so'm</div>
+                {% elif client.total_debt_uzs < 0 %} <div class="fw-bold text-success small">
+                +{{ client.total_debt_uzs|stringformat:"+d"|slice:"1:" }} (Haq)
+            </div>
+            {% endif %}
+            {% endif %}
+
+            {% if client.total_debt_usd %}
+            {% if client.total_debt_usd > 0 %}
+            <div class="fw-bold text-danger">${{ client.total_debt_usd|floatformat:2 }}</div>
+            {% elif client.total_debt_usd < 0 %} <div class="fw-bold text-success small">
+                +$ {{ client.total_debt_usd|stringformat:"+f"|slice:"1:" }} (Haq)
+        </div>
+        {% endif %}
+        {% endif %}
+
+        {% if not client.total_debt_uzs and not client.total_debt_usd %}
+        <span class="badge bg-light text-muted border">Hisob toza ✅</span>
+        {% endif %}
+
+        {% if client.total_debt_uzs == 0 and client.total_debt_usd == 0 %}
+        <span class="badge bg-light text-muted border">Hisob toza ✅</span>
+        {% endif %}
+
+    </div>
+
+</div>
+</div>
+{% empty %}
+<div class="text-center py-5 text-muted">
+    <i class="fa-solid fa-users-slash fa-2x mb-3 opacity-25"></i>
+    <p>Mijozlar yo'q</p>
+</div>
+{% endfor %}
+</div>
+
+<a href="{% url 'create_debt' %}"
+    class="btn btn-primary rounded-circle shadow-lg d-flex align-items-center justify-content-center"
+    style="position: fixed; bottom: 25px; right: 25px; width: 60px; height: 60px; font-size: 24px; z-index: 100;">
+    <i class="fa-solid fa-plus"></i>
+</a>
+
+{% endblock %}

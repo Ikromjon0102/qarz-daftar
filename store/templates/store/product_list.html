@@ -1,0 +1,169 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load cart_tags %} {% block content %}
+<div class="d-flex justify-content-between align-items-center mb-3 ps-1">
+    <h4 class="fw-bold m-0"><i class="fa-solid fa-store"></i> Do'kon</h4>
+    <a href="{% url 'dashboard' %}" class="btn btn-sm btn-secondary rounded-pill px-3">
+        <i class="fa-solid fa-arrow-left"></i> Chiqish
+    </a>
+</div>
+
+<div class="row g-2 pb-5 mb-5">
+    {% for product in products %}
+    <div class="col-6">
+        <div class="card h-100 shadow-sm border-0 rounded-4 overflow-hidden">
+
+            <div style="height: 140px; overflow: hidden; position: relative;">
+                {% if product.image %}
+                    <img src="{{ product.image.url }}" class="w-100 h-100" style="object-fit: cover;" alt="{{ product.name }}">
+                {% else %}
+                    <div class="bg-light w-100 h-100 d-flex align-items-center justify-content-center text-muted">
+                        <i class="fa-solid fa-image fa-2x opacity-25"></i>
+                    </div>
+                {% endif %}
+            </div>
+
+            <div class="card-body p-2 d-flex flex-column">
+                <h6 class="card-title fw-bold text-dark small mb-1 text-truncate">{{ product.name }}</h6>
+                <p class="card-text text-primary fw-bold mb-2">{{ product.price|floatformat:0 }} so'm</p>
+
+                <div class="mt-auto">
+                    {% with qty=cart|get_cart_qty:product.id %}
+
+                    <div id="controls-{{ product.id }}"
+                         class="{% if qty == 0 %}d-none{% endif %} d-flex justify-content-between align-items-center bg-light rounded-3 p-1 border">
+
+                        <button class="btn btn-sm btn-light rounded-3 text-danger shadow-none py-1 px-2"
+                                style="font-weight: bold;"
+                                onclick="updateCart('{{ product.id }}', 'decrease')">
+                            <i class="fa-solid fa-minus"></i>
+                        </button>
+
+                        <span id="qty-{{ product.id }}" class="fw-bold mx-1 text-dark">{{ qty }}</span>
+
+                        <button class="btn btn-sm btn-light rounded-3 text-primary shadow-none py-1 px-2"
+                                style="font-weight: bold;"
+                                onclick="updateCart('{{ product.id }}', 'add')">
+                            <i class="fa-solid fa-plus"></i>
+                        </button>
+                    </div>
+
+                    <button id="btn-{{ product.id }}"
+                            class="btn btn-primary btn-sm w-100 rounded-3 py-2 fw-bold {% if qty > 0 %}d-none{% endif %}"
+                            onclick="updateCart('{{ product.id }}', 'add')">
+                        <i class="fa-solid fa-cart-plus"></i> Savatga
+                    </button>
+
+                    {% endwith %}
+                </div>
+            </div>
+        </div>
+    </div>
+    {% empty %}
+        <div class="col-12 text-center py-5">
+            <i class="fa-solid fa-box-open fa-3x text-muted mb-3 opacity-25"></i>
+            <p class="text-muted">Hozircha mahsulotlar yo'q</p>
+        </div>
+    {% endfor %}
+</div>
+
+<div id="floatingCart" class="fixed-bottom p-3 {% if not cart %}d-none{% endif %}" style="z-index: 1050;">
+    <a href="{% url 'cart_detail' %}" class="btn btn-success w-100 py-3 shadow-lg rounded-4 d-flex justify-content-between align-items-center px-4">
+        <span class="fw-bold"><i class="fa-solid fa-basket-shopping me-2"></i> Savatga o'tish</span>
+        <span class="badge bg-white text-success rounded-pill px-3 py-2 fw-bold" id="cartCount">
+            ...
+        </span>
+    </a>
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+    // Sahifa yuklanganda umumiy sonni to'g'irlash (ixtiyoriy, agar viewdan kelsa)
+    // Hozircha updateCart orqali ishlaymiz.
+
+    function updateCart(productId, action) {
+        let url = '';
+        if (action === 'add') {
+            url = `/shop/add/${productId}/`;
+        } else {
+            url = `/shop/decrease/${productId}/`;
+        }
+
+        // Tugmani biroz "o'ylantirish" (Loading effekt)
+        const btn = document.getElementById(`btn-${productId}`);
+        const originalContent = btn ? btn.innerHTML : '';
+        if(btn && action === 'add' && !btn.classList.contains('d-none')) {
+            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i>';
+            btn.disabled = true;
+        }
+
+        fetch(url, {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': '{{ csrf_token }}',
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({})
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.status === 'ok') {
+                const controls = document.getElementById(`controls-${productId}`);
+                const qtySpan = document.getElementById(`qty-${productId}`);
+                const cartContainer = document.getElementById('floatingCart');
+                const cartCount = document.getElementById('cartCount');
+
+                // 1. Yangi sonni olamiz
+                // Agar server 'qty' qaytarmasa, eski logikani ishlatamiz (o'zimiz hisoblaymiz)
+                // Lekin tavsiya: views.py da add_to_cart ham 'qty' qaytarsin.
+                let newQty = data.qty;
+
+                // Agar serverdan qty kelmasa (fallback)
+                if (newQty === undefined) {
+                    let currentQty = parseInt(qtySpan.innerText) || 0;
+                    newQty = (action === 'add') ? currentQty + 1 : currentQty - 1;
+                }
+
+                // 2. HTMLni yangilash
+                qtySpan.innerText = newQty;
+
+                if (newQty > 0) {
+                    // Agar savatda bo'lsa: Tugmani yashir, +/- ni ko'rsat
+                    if (btn) {
+                        btn.classList.add('d-none');
+                        btn.innerHTML = originalContent; // Iconni qaytarish
+                        btn.disabled = false;
+                    }
+                    controls.classList.remove('d-none');
+                } else {
+                    // Agar 0 bo'lsa: +/- ni yashir, Tugmani ko'rsat
+                    controls.classList.add('d-none');
+                    if (btn) {
+                        btn.classList.remove('d-none');
+                        btn.innerHTML = originalContent;
+                        btn.disabled = false;
+                    }
+                }
+
+                // 3. Umumiy savat tugmasini yangilash
+                if (data.total_items > 0) {
+                    cartContainer.classList.remove('d-none');
+                    cartCount.innerText = data.total_items + " ta";
+                } else {
+                    cartContainer.classList.add('d-none');
+                }
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            // Xatolik bo'lsa tugmani o'z holiga qaytarish
+            if(btn) {
+                btn.innerHTML = originalContent;
+                btn.disabled = false;
+            }
+        });
+    }
+</script>
+{% endblock %}

@@ -1,0 +1,186 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="d-flex align-items-center mb-4 pt-2">
+    <div class="bg-primary text-white rounded-circle d-flex align-items-center justify-content-center me-3 shadow"
+        style="width: 54px; height: 54px; font-size: 24px;">
+        {{ client.full_name|slice:":1" }}
+    </div>
+    <div>
+        <h5 class="fw-bold m-0">{{ client.full_name }}</h5>
+        <a href="tel:{{ client.phone }}" class="text-decoration-none text-muted small">
+            <i class="fa-solid fa-phone"></i> {{ client.phone }}
+        </a>
+    </div>
+</div>
+
+<div class="app-card text-white mb-4 shadow-lg position-relative overflow-hidden"
+    style="background: radial-gradient(circle at top right, #363795, #005C97); border-radius: 16px; padding: 20px;">
+
+    <h6 class="opacity-75 mb-3">Joriy balans:</h6>
+
+    <div class="d-flex flex-column">
+        <h3 class="fw-bold mb-0">
+            {% if total_uzs > 0 %} <span class="text-danger">{{ total_uzs|floatformat:0 }} so'm</span> (Qarz)
+            {% elif total_uzs < 0 %} <span class="text-success">
+                +{{ total_uzs|stringformat:"+d"|slice:"1:" }} so'm</span>
+                (Haq)
+                {% else %} 0 so'm {% endif %}
+        </h3>
+
+        {% if total_usd != 0 %}
+        <h4 class="fw-bold mb-0 mt-1">
+            {% if total_usd > 0 %} <span class="text-danger">${{ total_usd|floatformat:2 }}</span>
+            {% else %} <span class="text-success">+${{ total_usd|stringformat:"+f"|slice:"1:" }}</span> {% endif %}
+        </h4>
+        {% endif %}
+    </div>
+</div>
+
+<div class="row g-2 mb-4">
+    <div class="col-6">
+        <a href="{% url 'create_debt' %}?client_id={{ client.id }}"
+            class="btn btn-outline-primary w-100 py-2 border-2 fw-bold" style="border-radius: 12px;">
+            <i class="fa-solid fa-plus"></i> Qarz Yozish
+        </a>
+    </div>
+    <div class="col-6">
+        <a href="{% url 'create_payment' %}?client_id={{ client.id }}"
+            class="btn btn-outline-success w-100 py-2 border-2 fw-bold" style="border-radius: 12px;">
+            <i class="fa-solid fa-money-bill-wave"></i> Pul Olish
+        </a>
+    </div>
+</div>
+
+<h6 class="fw-bold mb-3 ps-1 text-muted">Operatsiyalar tarixi</h6>
+
+<div class="pb-5">
+    {% for debt in debts %}
+
+    <div class="app-card mb-3 py-3 px-3 border-0 shadow-sm bg-white rounded-3">
+
+        <div class="d-flex justify-content-between align-items-center mb-2" style="cursor: pointer;"
+            data-date="{{ debt.created_at|date:'d.m.Y H:i' }}" data-items="{{ debt.items }}"
+            data-uzs="{{ debt.amount_uzs|floatformat:0 }}" data-usd="{{ debt.amount_usd|floatformat:2 }}"
+            onclick="showDetail(this)">
+
+            <div class="d-flex align-items-center" style="flex: 1; min-width: 0;">
+                <div class="me-3 rounded-circle d-flex align-items-center justify-content-center"
+                    style="width: 40px; height: 40px; background: {% if debt.transaction_type == 'payment' %}#d1e7dd{% elif debt.status == 'rejected' %}#f8d7da{% elif debt.status == 'pending' %}#fff3cd{% else %}#cfe2ff{% endif %};">
+
+                    {% if debt.transaction_type == 'payment' %}
+                    <i class="fa-solid fa-check text-success"></i>
+                    {% elif debt.status == 'rejected' %}
+                    <i class="fa-solid fa-xmark text-danger"></i>
+                    {% elif debt.status == 'pending' %}
+                    <i class="fa-regular fa-clock text-warning"></i>
+                    {% else %}
+                    <i class="fa-solid fa-bag-shopping text-primary"></i>
+                    {% endif %}
+                </div>
+
+                <div class="text-truncate">
+                    <div class="fw-bold text-dark text-truncate">{{ debt.items|truncatechars:20 }}</div>
+                    <small class="text-muted" style="font-size: 0.7rem;">
+                        {{ debt.created_at|date:"d.m" }}
+                        {% if debt.status == 'pending' %} <span
+                            class="badge bg-warning text-dark ms-1">Kutilmoqda</span>
+                        {% elif debt.status == 'rejected' %} <span class="badge bg-danger ms-1">Rad etilgan</span>
+                        {% endif %}
+                    </small>
+                </div>
+            </div>
+
+            <div class="text-end ms-2">
+                {% if debt.transaction_type == 'payment' %}
+                {% if debt.amount_uzs != 0 %}<div class="fw-bold text-success small">
+                    +{{ debt.amount_uzs|stringformat:"+d"|slice:"1:" }}</div>{% endif %}
+                {% else %}
+                {% if debt.amount_uzs > 0 %}<div class="fw-bold text-danger small">-{{ debt.amount_uzs|floatformat:0 }}
+                </div>{% endif %}
+                {% if debt.amount_usd > 0 %}<div class="fw-bold text-danger small">-${{ debt.amount_usd|floatformat:2 }}
+                </div>{% endif %}
+                {% endif %}
+            </div>
+        </div>
+
+        {% if debt.status == 'pending' or debt.status == 'rejected' %}
+        <div class="border-top pt-2 d-flex justify-content-end gap-2">
+
+            <a href="{% url 'manage_debt' debt.uuid 'delete' %}" class="btn btn-sm btn-outline-danger"
+                onclick="return confirm('Rostdan ham o\'chirmoqchimisiz?')">
+                <i class="fa-solid fa-trash"></i>
+            </a>
+
+            {% if debt.status == 'pending' %}
+            <a href="{% url 'manage_debt' debt.uuid 'resend' %}" class="btn btn-sm btn-outline-primary">
+                <i class="fa-regular fa-paper-plane"></i> Qayta yuborish
+            </a>
+            {% endif %}
+
+            <a href="{% url 'manage_debt' debt.uuid 'force_confirm' %}" class="btn btn-sm btn-success text-white"
+                onclick="return confirm('Mijoz tasdiqlamadi, lekin siz majburan tasdiqlamoqchimisiz?')">
+                <i class="fa-solid fa-check-double"></i> Majburiy tasdiqlash
+            </a>
+
+        </div>
+        {% endif %}
+
+    </div>
+    {% empty %}
+    <p class="text-center text-muted mt-4">Tarix bo'sh</p>
+    {% endfor %}
+</div>
+
+<div class="modal fade" id="detailModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-sm">
+        <div class="modal-content rounded-4 border-0 shadow">
+            <div class="modal-header border-0 pb-0 justify-content-center">
+                <h5 class="modal-title fw-bold" id="modalDate"></h5>
+            </div>
+            <div class="modal-body text-center">
+                <div class="p-3 bg-light rounded-3 mb-3 text-start">
+                    <p id="modalItems" class="fw-bold mb-0 text-dark"
+                        style="white-space: pre-wrap; font-size: 0.95rem;"></p>
+                </div>
+                <div class="text-center">
+                    <h4 class="fw-bold mt-1" id="modalSum"></h4>
+                </div>
+            </div>
+            <div class="modal-footer border-0 pt-0 justify-content-center pb-4">
+                <button type="button" class="btn btn-secondary w-50 rounded-pill"
+                    data-bs-dismiss="modal">Yopish</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+    // Modal scripti o'sha-o'sha
+    function showDetail(element) {
+        const date = element.getAttribute('data-date');
+        const items = element.getAttribute('data-items');
+        const sumUzs = element.getAttribute('data-uzs');
+        const sumUsd = element.getAttribute('data-usd');
+
+        document.getElementById('modalDate').innerText = date;
+        document.getElementById('modalItems').innerText = items;
+
+        let totalText = "";
+        // Absolyut qiymatlarni ko'rsatamiz (minus belgisiz)
+        if (sumUzs && sumUzs !== '0') totalText += sumUzs.replace('-', '') + " so'm";
+        if (sumUsd && sumUsd !== '0,00' && sumUsd !== '0.00') {
+            if (totalText) totalText += " + ";
+            totalText += "$" + sumUsd.replace('-', '');
+        }
+
+        document.getElementById('modalSum').innerText = totalText;
+        var myModal = new bootstrap.Modal(document.getElementById('detailModal'));
+        myModal.show();
+    }
+</script>
+{% endblock %}

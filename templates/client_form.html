@@ -1,0 +1,72 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<h4 class="mb-4 fw-bold ps-1">
+    {% if client %} <i class="fa-solid fa-user-pen"></i> Tahrirlash {% else %} <i class="fa-solid fa-user-plus"></i> Yangi Mijoz {% endif %}
+</h4>
+
+<form method="POST" autocomplete="off">
+    {% csrf_token %}
+    
+    <div class="app-card bg-white mb-4 shadow-sm">
+        <div class="mb-3">
+            <label class="form-label text-muted small text-uppercase fw-bold">F.I.SH</label>
+            <input type="text" name="full_name" class="form-control fw-bold" placeholder="Mijoz ismi" value="{{ client.full_name|default:'' }}" required>
+        </div>
+        
+        <div class="mb-0">
+            <label class="form-label text-muted small text-uppercase fw-bold">Telefon</label>
+            <input type="tel" name="phone" class="form-control fw-bold" placeholder="+998..." value="{{ client.phone|default:'' }}" required>
+        </div>
+    </div>
+
+    {% if client %}
+    <div class="app-card bg-white mb-4 shadow-sm">
+        <h6 class="fw-bold mb-3 text-primary"><i class="fa-brands fa-telegram"></i> Telegram Holati</h6>
+        
+        {% if client.telegram_id %}
+            <div class="alert alert-success d-flex align-items-center mb-2">
+                <i class="fa-solid fa-circle-check me-2"></i> 
+                <div>
+                    <strong>Ulangan</strong><br>
+                    <small>ID: {{ client.telegram_id }}</small>
+                </div>
+            </div>
+            
+            <a href="{% url 'client_reset_tg' client.id %}" class="btn btn-outline-danger w-100 btn-sm" onclick="return confirm('Rostdan ham Telegramni uzmoqchimisiz? Mijoz qayta ulanishi kerak bo\'ladi.')">
+                <i class="fa-solid fa-link-slash"></i> Bog'lanishni uzish (Reset)
+            </a>
+            <p class="text-muted small mt-2 mb-0">Agar mijoz profilini o'chirib, yangi ochgan bo'lsa, shu tugmani bosing.</p>
+
+        {% else %}
+            <div class="alert alert-warning mb-2">
+                <i class="fa-solid fa-triangle-exclamation"></i> Hali ulanmagan
+            </div>
+            
+            <label class="small text-muted mb-1">Mijozga yuboriladigan ssilka:</label>
+            <div class="input-group">
+                <input type="text" class="form-control" id="inviteLink" value="https://t.me/autorich_robot?start={{ client.invite_token }}" readonly>
+                <button class="btn btn-secondary" type="button" onclick="copyLink()">
+                    <i class="fa-regular fa-copy"></i>
+                </button>
+            </div>
+            <p class="text-success small mt-1" id="copyMsg" style="display:none;">Nusxalandi! Endi mijozga yuboring.</p>
+        {% endif %}
+    </div>
+    {% endif %}
+
+    <button type="submit" class="btn btn-primary w-100 py-3 rounded-3 fw-bold">
+        <i class="fa-solid fa-floppy-disk"></i> SAQLASH
+    </button>
+</form>
+
+<script>
+    function copyLink() {
+        var copyText = document.getElementById("inviteLink");
+        copyText.select();
+        copyText.setSelectionRange(0, 99999); 
+        navigator.clipboard.writeText(copyText.value);
+        document.getElementById("copyMsg").style.display = 'block';
+    }
+</script>
+{% endblock %}
