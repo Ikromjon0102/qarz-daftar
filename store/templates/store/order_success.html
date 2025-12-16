@@ -1,0 +1,32 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="d-flex flex-column align-items-center justify-content-center text-center pt-5 mt-5">
+
+    <div class="rounded-circle bg-success bg-opacity-10 d-flex align-items-center justify-content-center mb-4 animate__animated animate__bounceIn"
+        style="width: 100px; height: 100px;">
+        <i class="fa-solid fa-check fa-3x text-success"></i>
+    </div>
+
+    <h3 class="fw-bold mb-2">Buyurtma qabul qilindi!</h3>
+    <p class="text-muted">Buyurtma raqami: #{{ order.id }}</p>
+
+    <div class="app-card w-100 p-3 mb-4 text-start">
+        <p class="mb-1 text-muted small">Mijoz:</p>
+        <h6 class="fw-bold">{{ order.client.full_name }}</h6>
+
+        <p class="mb-1 mt-3 text-muted small">Jami summa:</p>
+        <h4 class="fw-bold text-primary">{{ order.total_price|floatformat:0 }} so'm</h4>
+
+        <div class="alert alert-warning mt-3 mb-0 small">
+            <i class="fa-regular fa-clock"></i> Do'kon egasi tasdiqlashini kuting. Tasdiqlangach, nasiya daftariga
+            yoziladi.
+        </div>
+    </div>
+
+    <a href="{% url 'shop_home' %}" class="btn btn-primary w-100 py-3 rounded-3 fw-bold">
+        <i class="fa-solid fa-store"></i> Do'konga qaytish
+    </a>
+
+</div>
+{% endblock %}

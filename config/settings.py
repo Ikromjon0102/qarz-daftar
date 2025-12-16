@@ -3,12 +3,12 @@ from pathlib import Path
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
-BASE_URL = 'https://miniapp.tunl.uz'
+BASE_URL = 'https://telapp.tunl.uz'
 SECRET_KEY = 'django-insecure-%4k_!kn#$x4!+o5b_9jvri9)g#8qww0a)0=y9^^#@#16#chqmy'
 
 DEBUG = True
-BOT_TOKEN = "8509838726:AAHCeYkYE2cba6RZH563ir5DdVpUhbJOlCY"
-ALLOWED_HOSTS = ['sizning_username.pythonanywhere.com', '127.0.0.1','*.tunl.uz', 'miniapp.tunl.uz']
+BOT_TOKEN = "5315308944:AAHAdfv2djwecCS7aiieLOyGbbtkfjNjAg8"
+ALLOWED_HOSTS = ['sizning_username.pythonanywhere.com', '127.0.0.1','*.tunl.uz', 'telapp.tunl.uz']
 CSRF_TRUSTED_ORIGINS = ['https://sizning_username.pythonanywhere.com','https://*.tunl.uz', 'https://miniapp.tunl.uz']
 
 X_FRAME_OPTIONS = 'ALLOWALL'

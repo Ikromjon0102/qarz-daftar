@@ -1,0 +1,25 @@
+# Python
+*.pyc
+__pycache__/
+venv/
+env/
+.venv/
+.env
+pip-log.txt
+pip-delete-this-arg.txt
+*.egg-info/
+.python-version
+build/
+dist/
+
+# Django
+db.sqlite3
+local_settings.py
+media/
+
+# IDEs and OS
+.idea/  # For PyCharm
+.vscode/ # For VS Code
+.DS_Store # For macOS
+Thumbs.db # For Windows
+*.log

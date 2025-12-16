@@ -57,14 +57,15 @@
 <div class="pb-5">
     {% for debt in debts %}
 
-    <div class="app-card mb-3 py-3 px-3 border-0 shadow-sm bg-white rounded-3">
+    <div class="app-card mb-2 py-3 px-3 border-0 shadow-sm bg-white rounded-3 position-relative">
 
-        <div class="d-flex justify-content-between align-items-center mb-2" style="cursor: pointer;"
-            data-date="{{ debt.created_at|date:'d.m.Y H:i' }}" data-items="{{ debt.items }}"
-            data-uzs="{{ debt.amount_uzs|floatformat:0 }}" data-usd="{{ debt.amount_usd|floatformat:2 }}"
-            onclick="showDetail(this)">
+        <div class="d-flex justify-content-between align-items-center">
 
-            <div class="d-flex align-items-center" style="flex: 1; min-width: 0;">
+            <div class="d-flex align-items-center" style="flex: 1; min-width: 0; cursor: pointer;"
+                data-date="{{ debt.created_at|date:'d.m.Y H:i' }}" data-items="{{ debt.items }}"
+                data-uzs="{{ debt.amount_uzs|floatformat:0 }}" data-usd="{{ debt.amount_usd|floatformat:2 }}"
+                onclick="showDetail(this)">
+
                 <div class="me-3 rounded-circle d-flex align-items-center justify-content-center"
                     style="width: 40px; height: 40px; background: {% if debt.transaction_type == 'payment' %}#d1e7dd{% elif debt.status == 'rejected' %}#f8d7da{% elif debt.status == 'pending' %}#fff3cd{% else %}#cfe2ff{% endif %};">
 
@@ -80,49 +81,51 @@
                 </div>
 
                 <div class="text-truncate">
-                    <div class="fw-bold text-dark text-truncate">{{ debt.items|truncatechars:20 }}</div>
+                    <div class="fw-bold text-dark text-truncate">{{ debt.items|truncatechars:18 }}</div>
                     <small class="text-muted" style="font-size: 0.7rem;">
                         {{ debt.created_at|date:"d.m" }}
                         {% if debt.status == 'pending' %} <span
-                            class="badge bg-warning text-dark ms-1">Kutilmoqda</span>
-                        {% elif debt.status == 'rejected' %} <span class="badge bg-danger ms-1">Rad etilgan</span>
-                        {% endif %}
+                            class="badge bg-warning text-dark ms-1">Kutilmoqda</span> {% endif %}
                     </small>
                 </div>
             </div>
 
-            <div class="text-end ms-2">
-                {% if debt.transaction_type == 'payment' %}
-                {% if debt.amount_uzs != 0 %}<div class="fw-bold text-success small">
-                    +{{ debt.amount_uzs|stringformat:"+d"|slice:"1:" }}</div>{% endif %}
-                {% else %}
-                {% if debt.amount_uzs > 0 %}<div class="fw-bold text-danger small">-{{ debt.amount_uzs|floatformat:0 }}
-                </div>{% endif %}
-                {% if debt.amount_usd > 0 %}<div class="fw-bold text-danger small">-${{ debt.amount_usd|floatformat:2 }}
-                </div>{% endif %}
-                {% endif %}
+            <div class="text-end ms-2 d-flex align-items-center">
+
+                <div class="me-3">
+                    {% if debt.transaction_type == 'payment' %}
+                    {% if debt.amount_uzs != 0 %}<div class="fw-bold text-success small">
+                        +{{ debt.amount_uzs|stringformat:"+d"|slice:"1:" }}</div>{% endif %}
+                    {% if debt.amount_usd != 0 %}<div class="fw-bold text-success small">
+                        +$ {{ debt.amount_usd|stringformat:"+f"|slice:"1:" }}</div>{% endif %}
+                    {% else %}
+                    {% if debt.amount_uzs > 0 %}<div class="fw-bold text-danger small">
+                        -{{ debt.amount_uzs|floatformat:0 }}</div>{% endif %}
+                    {% if debt.amount_usd > 0 %}<div class="fw-bold text-danger small">
+                        -$ {{ debt.amount_usd|floatformat:2 }}</div>{% endif %}
+                    {% endif %}
+                </div>
+
+                <a href="{% url 'manage_debt' debt.uuid 'delete' %}"
+                    class="btn btn-sm btn-light text-danger border shadow-none rounded-circle"
+                    style="width: 32px; height: 32px; display: flex; align-items: center; justify-content: center;"
+                    onclick="return confirm('⚠️ DIQQAT!\n\nBu yozuvni o\'chirib tashlamoqchimisiz?\nBu amal balansga ta\'sir qiladi va ortga qaytarib bo\'lmaydi!')">
+                    <i class="fa-solid fa-trash-can" style="font-size: 0.8rem;"></i>
+                </a>
+
             </div>
         </div>
 
-        {% if debt.status == 'pending' or debt.status == 'rejected' %}
-        <div class="border-top pt-2 d-flex justify-content-end gap-2">
-
-            <a href="{% url 'manage_debt' debt.uuid 'delete' %}" class="btn btn-sm btn-outline-danger"
-                onclick="return confirm('Rostdan ham o\'chirmoqchimisiz?')">
-                <i class="fa-solid fa-trash"></i>
-            </a>
-
-            {% if debt.status == 'pending' %}
-            <a href="{% url 'manage_debt' debt.uuid 'resend' %}" class="btn btn-sm btn-outline-primary">
+        {% if debt.status == 'pending' %}
+        <div class="border-top mt-2 pt-2 d-flex justify-content-end gap-2">
+            <a href="{% url 'manage_debt' debt.uuid 'resend' %}" class="btn btn-sm btn-outline-primary py-0"
+                style="font-size: 0.8rem;">
                 <i class="fa-regular fa-paper-plane"></i> Qayta yuborish
             </a>
-            {% endif %}
-
-            <a href="{% url 'manage_debt' debt.uuid 'force_confirm' %}" class="btn btn-sm btn-success text-white"
-                onclick="return confirm('Mijoz tasdiqlamadi, lekin siz majburan tasdiqlamoqchimisiz?')">
-                <i class="fa-solid fa-check-double"></i> Majburiy tasdiqlash
+            <a href="{% url 'manage_debt' debt.uuid 'force_confirm' %}" class="btn btn-sm btn-success text-white py-0"
+                style="font-size: 0.8rem;" onclick="return confirm('Tasdiqlaysizmi?')">
+                <i class="fa-solid fa-check"></i> Tasdiqlash
             </a>
-
         </div>
         {% endif %}
 

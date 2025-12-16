@@ -25,5 +25,27 @@ class Product(models.Model):
 
     class Meta: verbose_name = "Mahsulot"; verbose_name_plural = "Mahsulotlar"
 
-# Buyurtma (Order) modellarini sal keyinroq qo'shsak ham bo'ladi, 
-# avval mahsulotlarni chiqarib olaylik.
+
+class Order(models.Model):
+    STATUS_CHOICES = (
+        ('new', 'Yangi'),
+        ('accepted', 'Qabul qilindi'),
+        ('rejected', 'Bekor qilindi'),
+    )
+    client = models.ForeignKey(Client, on_delete=models.CASCADE, verbose_name="Mijoz")
+    total_price = models.DecimalField(max_digits=12, decimal_places=0, default=0, verbose_name="Jami summa")
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='new', verbose_name="Holat")
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self): return f"Buyurtma #{self.id} - {self.client}"
+
+
+class OrderItem(models.Model):
+    order = models.ForeignKey(Order, on_delete=models.CASCADE)
+    product = models.ForeignKey('Product', on_delete=models.SET_NULL, null=True)
+    qty = models.IntegerField(default=1)
+    price = models.DecimalField(max_digits=10, decimal_places=0) # O'sha vaqtdagi narx
+    
+    @property
+    def total(self):
+        return self.qty * self.price

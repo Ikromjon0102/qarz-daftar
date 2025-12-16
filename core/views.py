@@ -355,106 +355,240 @@ def client_cabinet_view(request):
 
 # core/views.py
 
+import json
 import requests
 from django.views.decorators.csrf import csrf_exempt
 from django.http import JsonResponse
 from django.conf import settings
-from .models import Client  # User admin uchun kerak bo'lishi mumkin
-import json
+from django.utils import timezone
 
+# Modellarni import qilamiz
+from .models import Client, Debt
+# Agar Order store app ichida bo'lsa:
+from store.models import Order
 
 @csrf_exempt
 def telegram_webhook(request):
     if request.method == 'POST':
         try:
             data = json.loads(request.body)
+            
+            # --------------------------------------------------
+            # 1. AGAR ODDIY XABAR KELSA (MESSAGE)
+            # --------------------------------------------------
             if 'message' in data:
                 chat_id = data['message']['chat']['id']
                 text = data['message'].get('text', '')
 
-                # --- 1. LOGIN (SSILKA ORQALI ULASH) ---
-                # Agar start dan keyin nimadir bo'lsa (Masalan: /start 550e8400-e29b...)
+                # A) LOGIN (SSILKA)
                 if text.startswith('/start '):
-                    token = text.split(' ')[1]  # Tokenni ajratib olamiz
-
+                    token = text.split(' ')[1]
                     try:
-                        # Shu token egasini qidiramiz
                         client = Client.objects.filter(invite_token=token).first()
-
                         if client:
-                            # TOPTDIK! Bog'laymiz
                             client.telegram_id = chat_id
-                            # Xavfsizlik uchun tokenni o'chiramiz (bir martalik)
                             client.invite_token = None
                             client.save()
-
                             msg = f"🎉 <b>Tabriklaymiz, {client.full_name}!</b>\n\nSizning hisobingiz muvaffaqiyatli ulandi."
                         else:
                             msg = "❌ <b>Xatolik!</b>\nBu ssilka eskirgan yoki noto'g'ri."
-
                     except Exception as e:
                         msg = "❌ Tizim xatoligi."
                         print(f"Link error: {e}")
-
-                    # Javob yuboramiz
+                    
                     send_tg_msg(chat_id, msg)
-
-                    # Agar muvaffaqiyatli ulangan bo'lsa, darrov kirish tugmasini ham chiqaramiz
                     if client:
                         send_menu(chat_id, request.get_host())
 
-                # --- 2. ODDIY START ---
+                # B) START
                 elif text == '/start':
                     send_menu(chat_id, request.get_host())
 
-            return JsonResponse({'status': 'ok'})
-        except Exception as e:
-            print(f"Webhook error: {e}")
-            return JsonResponse({'status': 'error'})
+            # --------------------------------------------------
+            # 2. AGAR KNOPKA BOSILSA (CALLBACK_QUERY)
+            # --------------------------------------------------
+            elif 'callback_query' in data:
+                callback = data['callback_query']
+                chat_id = callback['message']['chat']['id']
+                message_id = callback['message']['message_id']
+                data_text = callback['data'] # Masalan: "order_accept_5"
+                callback_id = callback['id']
 
+                print(f"🔘 Callback keldi: {data_text}") # DEBUG UCHUN
+
+                # A) NASIYAGA YOZISH (TASDIQLASH)
+                if data_text.startswith('order_accept_'):
+                    order_id = data_text.split('_')[2]
+                    handle_order_accept(chat_id, message_id, order_id)
+
+                # B) BEKOR QILISH (OTMEN)
+                elif data_text.startswith('order_reject_'):
+                    order_id = data_text.split('_')[2]
+                    handle_order_reject(chat_id, message_id, order_id)
+                
+                # Telegramga "Knopka bosildi" deb javob qaytaramiz (Loading to'xtaydi)
+                answer_callback(callback_id)
+
+            return JsonResponse({'status': 'ok'})
+
+        except Exception as e:
+            print(f"❌ Webhook Glavnaya Xatolik: {e}") # Xatoni terminalda ko'rish uchun
+            return JsonResponse({'status': 'error'})
+            
     return JsonResponse({'status': 'error'}, status=405)
 
 
-# core/views.py (eng pastki qismi)
+# --- LOGIKA FUNKSIYALARI ---
+
+def handle_order_accept(chat_id, message_id, order_id):
+    print(f"✅ Order #{order_id} qabul qilinmoqda...")
+    try:
+        order = Order.objects.get(id=order_id)
+        
+        # Agar status 'new' bo'lmasa, demak allaqachon bosilgan
+        if order.status != 'new':
+            print("⚠️ Bu order allaqachon o'zgargan")
+            answer_callback_text(chat_id, "Bu buyurtma allaqachon ishlov berilgan!")
+            # Xabarni yangilab qo'yamiz baribir
+            edit_tg_message(chat_id, message_id, f"⚠️ Bu buyurtma holati: {order.get_status_display()}")
+            return
+
+        # 1. Order statusini o'zgartiramiz
+        order.status = 'accepted'
+        order.save()
+        
+        # 2. QARZ (DEBT) YARATAMIZ 
+        items_desc = f"🛒 Buyurtma #{order.id} (Online):\n"
+        for item in order.orderitem_set.all():
+            p_name = item.product.name if item.product else "Noma'lum"
+            items_desc += f"- {p_name} ({item.qty}x)\n"
+            
+        Debt.objects.create(
+            client=order.client,
+            amount_uzs=order.total_price,
+            amount_usd=0,
+            items=items_desc,
+            status='confirmed',
+            transaction_type='debt'
+        )
+        print("✅ Debt yaratildi!")
+        
+        # 3. Xabarni yangilaymiz
+        new_text = (
+            f"✅ <b>QABUL QILINDI</b>\n"
+            f"👤 {order.client.full_name}\n"
+            f"💰 {order.total_price:,.0f} so'm nasiyaga yozildi."
+        )
+        edit_tg_message(chat_id, message_id, new_text)
+        
+        # 4. Mijozga xabar (Ixtiyoriy)
+        if order.client.telegram_id:
+             send_tg_msg(order.client.telegram_id, f"✅ Buyurtmangiz (#{order.id}) qabul qilindi.")
+
+    except Order.DoesNotExist:
+        print("❌ Order topilmadi bazadan")
+        edit_tg_message(chat_id, message_id, "❌ Buyurtma topilmadi.")
+    except Exception as e:
+        print(f"❌ handle_order_accept ichida xato: {e}")
+
+
+def handle_order_reject(chat_id, message_id, order_id):
+    print(f"❌ Order #{order_id} bekor qilinmoqda...")
+    try:
+        order = Order.objects.get(id=order_id)
+        
+        if order.status != 'new':
+            edit_tg_message(chat_id, message_id, f"⚠️ Bu buyurtma allaqachon {order.get_status_display()} bo'lgan!")
+            return
+
+        # 1. Statusni bekor qilish
+        order.status = 'rejected'
+        order.save()
+        
+        # 2. Xabarni yangilash
+        new_text = (
+            f"❌ <b>BEKOR QILINDI</b>\n"
+            f"👤 {order.client.full_name}\n"
+            f"Buyurtma rad etildi."
+        )
+        edit_tg_message(chat_id, message_id, new_text)
+
+    except Order.DoesNotExist:
+        edit_tg_message(chat_id, message_id, "❌ Buyurtma topilmadi.")
+    except Exception as e:
+        print(f"❌ handle_order_reject ichida xato: {e}")
+
+
+# --- TELEGRAM API YORDAMCHILARI ---
+
+def answer_callback(callback_id):
+    """Loadingni to'xtatish"""
+    try:
+        url = f"https://api.telegram.org/bot{settings.BOT_TOKEN}/answerCallbackQuery"
+        requests.post(url, json={"callback_query_id": callback_id})
+    except Exception as e:
+        print(f"answer_callback error: {e}")
+
+def answer_callback_text(callback_id, text):
+    """Ekranda kichik xabar ko'rsatish (Toast)"""
+    try:
+        url = f"https://api.telegram.org/bot{settings.BOT_TOKEN}/answerCallbackQuery"
+        requests.post(url, json={"callback_query_id": callback_id, "text": text, "show_alert": True})
+    except Exception as e:
+        print(f"answer_callback_text error: {e}")
+
+def edit_tg_message(chat_id, message_id, new_text):
+    """Xabarni tahrirlash"""
+    try:
+        url = f"https://api.telegram.org/bot{settings.BOT_TOKEN}/editMessageText"
+        payload = {
+            "chat_id": chat_id,
+            "message_id": message_id,
+            "text": new_text,
+            "parse_mode": "HTML"
+        }
+        res = requests.post(url, json=payload)
+        if res.status_code != 200:
+            print(f"Telegram Edit Error: {res.text}")
+    except Exception as e:
+        print(f"edit_tg_message error: {e}")
 
 def send_tg_msg(chat_id, text):
-    # TO'G'IRLANDI: Aniq Telegram URL yozildi
-    url = f"https://api.telegram.org/bot{settings.BOT_TOKEN}/sendMessage"
-    payload = {
-        "chat_id": chat_id,
-        "text": text,
-        "parse_mode": "HTML"
-    }
-    # Xatoni ko'rish uchun try-except qo'shamiz (log uchun)
     try:
+        url = f"https://api.telegram.org/bot{settings.BOT_TOKEN}/sendMessage"
+        payload = {
+            "chat_id": chat_id,
+            "text": text,
+            "parse_mode": "HTML"
+        }
         requests.post(url, json=payload)
     except Exception as e:
         print(f"Telegram send error: {e}")
 
 def send_menu(chat_id, domain):
-    # TO'G'IRLANDI: Aniq Telegram URL yozildi
-    url = f"https://api.telegram.org/bot{settings.BOT_TOKEN}/sendMessage"
-    welcome_text = (
-        "👋 <b>Nasiya Nazorati Tizimi</b>\n\n"
-        "Shaxsiy kabinetingizga kirish uchun pastdagi tugmani bosing 👇"
-    )
-    payload = {
-        "chat_id": chat_id,
-        "text": welcome_text,
-        "parse_mode": "HTML",
-        "reply_markup": {
-            "inline_keyboard": [[
-                {
-                    "text": "🏠 Kabinetga kirish",
-                    "web_app": {"url": f"https://{domain}/auth/telegram-login/"}
-                }
-            ]]
-        }
-    }
     try:
+        url = f"https://api.telegram.org/bot{settings.BOT_TOKEN}/sendMessage"
+        welcome_text = (
+            "👋 <b>Nasiya Nazorati Tizimi</b>\n\n"
+            "Shaxsiy kabinetingizga kirish uchun pastdagi tugmani bosing 👇"
+        )
+        payload = {
+            "chat_id": chat_id,
+            "text": welcome_text,
+            "parse_mode": "HTML",
+            "reply_markup": {
+                "inline_keyboard": [[
+                    {
+                        "text": "🏠 Kabinetga kirish",
+                        "web_app": {"url": f"https://{domain}/auth/telegram-login/"}
+                    }
+                ]]
+            }
+        }
         requests.post(url, json=payload)
     except Exception as e:
         print(f"Telegram menu error: {e}")
+
 
 @login_required(login_url='/login/')
 def settings_view(request):
