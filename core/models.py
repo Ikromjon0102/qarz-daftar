@@ -13,6 +13,13 @@ class Client(models.Model):
         status = "✅ Bog'langan" if self.telegram_id else "⏳ Kutilmoqda"
         return f"{self.full_name} ({self.phone}) - {status}"
 
+class AllowedAdmin(models.Model):
+    name = models.CharField(max_length=100, verbose_name="Xodim Ismi")
+    telegram_id = models.BigIntegerField(unique=True, verbose_name="Telegram ID")
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"{self.name} ({self.telegram_id})"
 
 class Debt(models.Model):
     STATUS_CHOICES = (
@@ -24,6 +31,19 @@ class Debt(models.Model):
     TYPE_CHOICES = (
         ('debt', 'Nasiya (Qarz)'),
         ('payment', 'To\'lov (Qaytarish)'),
+    )
+    PAYMENT_METHOD_CHOICES = (
+        ('cash', 'Naqd'),
+        ('card', 'Plastik (Humo/Uzcard)'),
+        ('click', 'Click / Payme'),
+        ('transfer', 'Perechislenie'),
+    )
+    payment_method = models.CharField(
+        max_length=20,
+        choices=PAYMENT_METHOD_CHOICES,
+        null=True,
+        blank=True,
+        verbose_name="To'lov turi"
     )
     transaction_type = models.CharField(max_length=10, choices=TYPE_CHOICES, default='debt')
     client = models.ForeignKey(Client, on_delete=models.CASCADE)

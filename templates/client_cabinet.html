@@ -12,31 +12,61 @@
         <a href="{% url 'shop_home' %}" class="btn btn-outline-primary btn-sm">Do'kon</a>
     </div>
 </div>
+<div class="mb-3">
+    <form method="get" action="." class="position-relative">
+        <input type="text"
+               name="q"
+               value="{{ search_query }}"
+               class="form-control form-control-lg rounded-4 ps-5 shadow-sm border-0"
+               placeholder="Qidirish... (Masalan: Fara)"
+               onchange="this.form.submit()"> <i class="fa-solid fa-magnifying-glass position-absolute text-muted"
+           style="left: 20px; top: 50%; transform: translateY(-50%);"></i>
 
+        {% if search_query %}
+            <a href="{% url 'client_cabinet' %}"
+               class="position-absolute text-danger"
+               style="right: 20px; top: 50%; transform: translateY(-50%); text-decoration: none;">
+               <i class="fa-solid fa-xmark"></i>
+            </a>
+        {% endif %}
+    </form>
+</div>
+
+{% if not debts and search_query %}
+    <div class="text-center py-5 text-muted">
+        <i class="fa-solid fa-ghost fa-2x mb-2"></i>
+        <p>" <b>{{ search_query }}</b> " bo'yicha hech narsa topilmadi.</p>
+    </div>
+{% endif %}
+{#<div class="app-card text-white mb-4 shadow-lg position-relative overflow-hidden"#}
+{#    style="background: linear-gradient(135deg, #ff416c, #ff4b2b); border: none; border-radius: 16px; padding: 20px;">#}
+{##}
+{#    <i class="fa-solid fa-wallet position-absolute"#}
+{#        style="right: -20px; bottom: -20px; font-size: 120px; opacity: 0.15;"></i>#}
 <div class="app-card text-white mb-4 shadow-lg position-relative overflow-hidden"
-    style="background: linear-gradient(135deg, #ff416c, #ff4b2b); border: none; border-radius: 16px; padding: 20px;">
+    style="background: radial-gradient(circle at top right, #363795, #005C97); border-radius: 16px; padding: 20px;">
 
-    <i class="fa-solid fa-wallet position-absolute"
-        style="right: -20px; bottom: -20px; font-size: 120px; opacity: 0.15;"></i>
-
-    <h6 class="opacity-75 mb-3">Sizning joriy qarzingiz:</h6>
+    <h6 class="opacity-75 mb-3">Joriy balans:</h6>
 
     <div class="d-flex flex-column">
-        {% if total_uzs > 0 %}
-        <h3 class="fw-bold mb-0">{{ total_uzs|floatformat:0 }} so'm</h3>
-        {% endif %}
+        <h3 class="fw-bold mb-0">
+            {% if total_uzs > 0 %} <span class="text-danger">{{ total_uzs|floatformat:0 }} so'm</span> (Qarz)
+            {% elif total_uzs < 0 %} <span class="text-success">
+                +{{ total_uzs|stringformat:"+d"|slice:"1:" }} so'm</span>
+                (Haq)
+                {% else %} 0 so'm {% endif %}
+        </h3>
 
-        {% if total_usd > 0 %}
-        <h4 class="fw-bold mb-0 mt-1 text-warning" style="text-shadow: 0 1px 2px rgba(0,0,0,0.2);">
-            ${{ total_usd|floatformat:2 }}</h4>
-        {% endif %}
-
-        {% if total_uzs == 0 and total_usd == 0 %}
-        <h3 class="fw-bold mb-0">0 so'm</h3>
-        <small class="opacity-75 mt-1">Qarzingiz yo'q, halolsiz! 👍</small>
+        {% if total_usd != 0 %}
+        <h4 class="fw-bold mb-0 mt-1">
+            {% if total_usd > 0 %} <span class="text-danger">${{ total_usd|floatformat:2 }}</span>
+            {% else %} <span class="text-success">+${{ total_usd|stringformat:"+f"|slice:"1:" }}</span> {% endif %}
+        </h4>
         {% endif %}
     </div>
 </div>
+
+{#</div>#}
 
 <div class="d-flex justify-content-between align-items-center px-2 mb-3">
     <span class="text-muted small fw-bold"><i class="fa-regular fa-calendar"></i> Shu oydagi xaridlar:</span>
@@ -56,49 +86,50 @@
 
 <hr class="text-muted opacity-25">
 
-<h6 class="fw-bold mb-3 ps-1"><i class="fa-solid fa-clock-rotate-left"></i> Oxirgi operatsiyalar</h6>
+<ul class="nav nav-pills nav-fill mb-3 bg-light p-1 rounded-3" id="pills-tab" role="tablist">
+    <li class="nav-item" role="presentation">
+        <button class="nav-link active rounded-3 fw-bold small" id="pills-all-tab" data-bs-toggle="pill" data-bs-target="#pills-all" type="button">
+            Hammasi
+        </button>
+    </li>
+    <li class="nav-item" role="presentation">
+        <button class="nav-link rounded-3 fw-bold small" id="pills-debt-tab" data-bs-toggle="pill" data-bs-target="#pills-debt" type="button">
+            <span class="text-danger">Nasiyalar</span>
+        </button>
+    </li>
+    <li class="nav-item" role="presentation">
+        <button class="nav-link rounded-3 fw-bold small" id="pills-pay-tab" data-bs-toggle="pill" data-bs-target="#pills-pay" type="button">
+            <span class="text-success">To'lovlar</span>
+        </button>
+    </li>
+</ul>
 
-<div class="pb-5">
-    {% for debt in debts %}
-    <div class="app-card mb-2 py-3 px-3 border-0 shadow-sm bg-white rounded-3"
-        style="cursor: pointer; transition: transform 0.1s;" data-date="{{ debt.created_at|date:'d.m.Y' }}"
-        data-items="{{ debt.items }}" data-uzs="{{ debt.amount_uzs|floatformat:0 }}"
-        data-usd="{{ debt.amount_usd|floatformat:2 }}" onclick="showDetail(this)">
+<div class="tab-content" id="pills-tabContent">
+<div class="tab-pane fade show active" id="pills-all">
+    {% include 'partials/history_list.html' with items=history %}
+</div>
 
-        <div class="d-flex justify-content-between align-items-center">
-
-            <div style="flex: 1; min-width: 0;">
-                <div class="d-flex align-items-center mb-1">
-                    <span class="badge bg-light text-muted me-2" style="font-size: 0.7rem;">
-                        {{ debt.created_at|date:"d.m" }}</span>
-                    <small class="text-muted" style="font-size: 0.75rem;">{{ debt.created_at|date:"H:i" }}</small>
-                </div>
-                <div class="fw-bold text-dark text-truncate">
-                    {{ debt.items|truncatechars:28 }}
-                </div>
-            </div>
-
-            <div class="text-end ms-3 d-flex align-items-center">
-                <div>
-                    {% if debt.amount_uzs > 0 %}
-                    <div class="fw-bold text-danger small">-{{ debt.amount_uzs|floatformat:0 }}</div>
-                    {% endif %}
-                    {% if debt.amount_usd > 0 %}
-                    <div class="fw-bold text-danger small">-${{ debt.amount_usd|floatformat:2 }}</div>
-                    {% endif %}
-                </div>
-                <i class="fa-solid fa-chevron-right text-muted ms-2" style="font-size: 0.8rem;"></i>
-            </div>
-        </div>
-    </div>
+<div class="tab-pane fade" id="pills-debt">
+    {% for debt in history %}
+        {% if debt.transaction_type == 'debt' %}
+            {% include 'partials/debt_card.html' %}
+        {% endif %}
     {% empty %}
-    <div class="text-center text-muted py-5">
-        <i class="fa-solid fa-basket-shopping fa-3x mb-3 opacity-25"></i>
-        <p>Hozircha tarix bo'sh</p>
-    </div>
+        <p class="text-center text-muted mt-4">Nasiyalar yo'q</p>
     {% endfor %}
 </div>
 
+<div class="tab-pane fade" id="pills-pay">
+    {% for debt in history %}
+        {% if debt.transaction_type == 'payment' %}
+            {% include 'partials/payment_card.html' %}
+        {% endif %}
+    {% empty %}
+        <p class="text-center text-muted mt-4">To'lovlar yo'q</p>
+    {% endfor %}
+</div>
+
+</div>
 <div class="modal fade" id="detailModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered modal-sm">
         <div class="modal-content rounded-4 border-0 shadow">

@@ -1,0 +1,54 @@
+{% extends 'base.html' %}
+
+{% block matn %}
+<h5 class="fw-bold m-0"><i class="fa-solid fa-users-gear text-primary"></i> Adminlar Boshqaruvi</h5>
+{% endblock %}
+{% block content %}
+    <div class="card shadow-sm border-0 rounded-4">
+    <div class="card-body">
+
+        <form action="{% url 'manage_admins' 'add' %}" method="POST" class="row g-2 align-items-center mb-4">
+            {% csrf_token %}
+            <div class="col-md-5">
+                <input type="text" name="name" class="form-control" placeholder="Ismi (Masalan: Ali)" required>
+            </div>
+            <div class="col-md-5">
+                <input type="number" name="telegram_id" class="form-control" placeholder="Telegram ID (Masalan: 1234567)" required>
+            </div>
+            <div class="col-md-2">
+                <button type="submit" class="btn btn-primary w-100 fw-bold">
+                    <i class="fa-solid fa-plus"></i> Qo'shish
+                </button>
+            </div>
+        </form>
+
+        <div class="list-group">
+            {% for admin in allowed_admins %}
+            <div class="list-group-item d-flex justify-content-between align-items-center border-0 bg-light mb-2 rounded-3">
+                <div class="d-flex align-items-center">
+                    <div class="bg-white p-2 rounded-circle me-3 text-primary shadow-sm">
+                        <i class="fa-solid fa-user-shield"></i>
+                    </div>
+                    <div>
+                        <h6 class="fw-bold mb-0 text-dark">{{ admin.name }}</h6>
+                        <small class="text-muted">ID: {{ admin.telegram_id }}</small>
+                    </div>
+                </div>
+
+                <a href="{% url 'manage_admins_id' 'delete' admin.id %}"
+                   class="btn btn-sm btn-outline-danger border-0 bg-white shadow-sm"
+                   onclick="return confirm('Rostdan ham o\'chirmoqchimisiz?')">
+                    <i class="fa-solid fa-trash-can"></i>
+                </a>
+            </div>
+            {% empty %}
+                <div class="text-center py-4 text-muted border rounded-3 border-dashed">
+                    <i class="fa-solid fa-user-slash fa-2x mb-2 opacity-50"></i>
+                    <p class="m-0">Qo'shimcha adminlar yo'q</p>
+                </div>
+            {% endfor %}
+        </div>
+
+    </div>
+</div>
+{% endblock %}

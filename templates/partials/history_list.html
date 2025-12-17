@@ -1,0 +1,18 @@
+{% for debt in items %}
+    
+    {% if debt.transaction_type == 'debt' %}
+        {% include 'partials/debt_card.html' %}
+        
+    {% elif debt.transaction_type == 'payment' %}
+        {% include 'partials/payment_card.html' %}
+        
+    {% endif %}
+
+{% empty %}
+    <div class="text-center py-5">
+        <div class="mb-3 text-muted opacity-25">
+            <i class="fa-regular fa-folder-open fa-3x"></i>
+        </div>
+        <p class="text-muted small">Hozircha tarix topilmadi</p>
+    </div>
+{% endfor %}

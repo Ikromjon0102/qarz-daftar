@@ -17,45 +17,57 @@ def login_page_view(request):
     return render(request, 'login_loader.html')
 
 
+from .models import AllowedAdmin  # User va yangi model
+from django.db.models import Q
+
+
+# 1. LOGIN LOGIKASINI SODDALASHTIRAMIZ
 @csrf_exempt
 def telegram_auth_view(request):
-    # --- 1. AGAR TUGMA BOSILIB KIRILSA (GET) ---
-    # Bu qism `login_loader.html` ni ochib beradi
     if request.method == 'GET':
         return render(request, 'login_loader.html')
 
-    # --- 2. AGAR LOADER JS ORQALI MA'LUMOT YUBORSA (POST) ---
     if request.method == 'POST':
         try:
             data = json.loads(request.body)
             telegram_id = int(data.get('telegram_id'))
 
-            # A) ADMINMI?
-            if telegram_id in settings.ALLOWED_ADMIN_IDS:
-                user = User.objects.filter(is_superuser=True).first()
-                if user:
-                    login(request, user)
+            # --- YANGI TEKSHIRUV ---
+            # 1. Settingsdagi Glavniy Adminmi?
+            is_main_admin = telegram_id in settings.ALLOWED_ADMIN_IDS
+
+            # 2. Yoki biz qo'shgan Xodimmi?
+            is_staff = AllowedAdmin.objects.filter(telegram_id=telegram_id).exists()
+
+            if is_main_admin or is_staff:
+                # Bazadagi haqiqiy Superuser (admin) nomidan kiritib yuboramiz
+                # Shunda har biriga alohida User ochish shart emas
+                superuser = User.objects.filter(is_superuser=True).first()
+                if superuser:
+                    login(request, superuser)
                     return JsonResponse({'status': 'ok', 'redirect_url': '/'})
 
-            # B) MIJOZMI?
+            # 3. Agar admin bo'lmasa, mijozligini tekshiramiz
             client = Client.objects.filter(telegram_id=telegram_id).first()
             if client:
                 request.session['client_id'] = client.id
                 return JsonResponse({'status': 'ok', 'redirect_url': '/my-cabinet/'})
 
-            # C) HECH KIM EMAS
-            return JsonResponse({'status': 'error', 'msg': 'Siz ro\'yxatdan o\'tmagansiz'}, status=403)
+            return JsonResponse({'status': 'error', 'msg': 'Ruxsat yo\'q'}, status=403)
 
         except Exception as e:
             print(f"Auth error: {e}")
             return JsonResponse({'status': 'error'}, status=400)
-
     return JsonResponse({'status': 'error'}, status=405)
 
 
 @login_required(login_url='/login/')
 def main_menu_view(request):
-    return render(request, 'main_menu.html')
+    allowed_admins = AllowedAdmin.objects.all().order_by('-created_at')
+
+    return render(request, 'main_menu.html', {
+        'allowed_admins': allowed_admins,
+    })
 
 @login_required(login_url='/login/')
 def create_debt_view(request):
@@ -128,47 +140,93 @@ def create_debt_view(request):
         'current_rate': current_rate # <--- Shablonga uzatamiz
     })
 
-@login_required(login_url='/login/')
+
+@login_required(login_url='/auth/telegram-login/')
 def create_payment_view(request):
     selected_client = None
     client_id_param = request.GET.get('client_id')
+
+    # Agar URLda ?client_id=5 deb kelsa, o'sha mijozni tanlab qo'yamiz
     if client_id_param:
         selected_client = Client.objects.filter(id=client_id_param).first()
 
     if request.method == 'POST':
         client_id = request.POST.get('client_id')
-        
-        # Bo'sh kelsa 0 deb olamiz
+        payment_method = request.POST.get('payment_method')  # <--- YANGI
+        note = request.POST.get('note')  # <--- YANGI (Izoh)
+
+        # Summalarni olamiz
         try:
             amount_uzs = float(request.POST.get('amount_uzs') or 0)
-        except ValueError: amount_uzs = 0
-        
+        except ValueError:
+            amount_uzs = 0
+
         try:
             amount_usd = float(request.POST.get('amount_usd') or 0)
-        except ValueError: amount_usd = 0
-        
+        except ValueError:
+            amount_usd = 0
+
         if client_id and (amount_uzs > 0 or amount_usd > 0):
             client = get_object_or_404(Client, id=client_id)
-            
-            # To'lovni MINUS bilan yozamiz
+
+            # 1. Chiroyli tavsif (Description) yasaymiz
+            # Masalan: "💵 To'lov (Click)"
+            method_names = {
+                'cash': 'Naqd',
+                'card': 'Karta',
+                'click': 'Click',
+                'transfer': 'Perechislenie'
+            }
+            method_display = method_names.get(payment_method, '')
+
+            description = f"💵 To'lov ({method_display})" if method_display else "💵 To'lov"
+
+            # Agar izoh bo'lsa, uni ham qo'shamiz
+            if note:
+                description += f" | {note}"
+
+            # 2. Bazaga saqlaymiz (Minus bilan)
             Debt.objects.create(
                 client=client,
-                amount_uzs = -amount_uzs, 
-                amount_usd = -amount_usd,
-                items = "💵 To'lov qabul qilindi",
-                status = 'confirmed', 
-                transaction_type = 'payment'
+                amount_uzs=-amount_uzs,
+                amount_usd=-amount_usd,
+                items=description,  # <--- Yangilangan matn
+                status='confirmed',
+                transaction_type='payment',
+                payment_method=payment_method  # <--- Bazaga yozamiz
             )
-            
-            messages.success(request, "To'lov qabul qilindi!")
-            # Yana mijoz profiliga qaytamiz
+
+            current_balance = Debt.objects.filter(client=client, status='confirmed').aggregate(Sum('amount_uzs'))['amount_uzs__sum'] or 0
+
+            # B) Agar mijozning Telegrami bo'lsa, xabar yuboramiz
+            if client.telegram_id:
+                try:
+                    msg = f"💸 <b>To'lov qabul qilindi!</b>\n\n"
+                    msg += f"👤 Mijoz: {client.full_name}\n"
+                    msg += f"💰 To'landi: <b>{amount_uzs:,.0f} so'm</b> ({method_display})\n"
+
+                    if note:
+                        msg += f"📝 Izoh: {note}\n"
+
+                    msg += "➖➖➖➖➖➖➖➖\n"
+                    msg += f"📉 Qolgan qarz: <b>{current_balance:,.0f} so'm</b>"
+
+                    # Xabarni yuboramiz (funksiya o'sha faylda bor deb hisoblaymiz)
+                    send_tg_msg(client.telegram_id, msg)
+
+                except Exception as e:
+                    print(f"Telegram xato: {e}")
+            messages.success(request, f"✅ {client.full_name} dan to'lov qabul qilindi!")
+
+            # To'g'ridan-to'g'ri mijoz sahifasiga qaytamiz
             return redirect('admin_client_detail', client_id=client.id)
 
     clients = Client.objects.all().order_by('full_name')
+
     return render(request, 'create_payment.html', {
         'clients': clients,
         'back_url': 'main_menu',
-        'selected_client': selected_client # Shablonga uzatamiz
+        'selected_client': selected_client
     })
 
 @login_required(login_url='/login/')
@@ -243,7 +301,7 @@ def debt_detail_view(request, debt_uuid):
 def dashboard_view(request):
     now = timezone.now()
     month_start = now.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
-    
+    allowed_admins = AllowedAdmin.objects.all().order_by('-created_at')
     # 1. CLIENTLAR RO'YXATI (BALANS) - Bu o'zgarishsiz qoladi
     # Bu yerda plyus va minus birga hisoblanaveradi, chunki bu QARZ QOLDIG'I
     clients = Client.objects.annotate(
@@ -292,7 +350,8 @@ def dashboard_view(request):
     return render(request, 'dashboard.html', {
         'clients': clients,
         'stats': stats,
-        'back_url': 'main_menu'
+        'back_url': 'main_menu',
+        'allowed_admins': allowed_admins,
     })
 
 @login_required(login_url='/login/')
@@ -320,38 +379,49 @@ def admin_client_detail_view(request, client_id):
         'back_url': 'dashboard' # Orqaga qaytish Dashboardga
     })
 
+
 def client_cabinet_view(request):
     client_id = request.session.get('client_id')
-    if not client_id: return redirect('login_page')
+    if not client_id: return redirect('login_page')  # Login page nomini tekshiring (telegram_auth bo'lishi mumkin)
+
     client = get_object_or_404(Client, id=client_id)
-    
+
     # Sanalar
     now = timezone.now()
     month_start = now - timedelta(days=30)
 
-    # Hamma qarzlari
-    debts = Debt.objects.filter(client=client, status='confirmed').order_by('-created_at')
-    
+    # Hamma qarzlari (Bu yerda 'debts' deb nomlangan o'zgaruvchi aslida butun tarix)
+    all_history = Debt.objects.filter(client=client, status='confirmed').order_by('-created_at')
+
     # Jami qarz (Balans)
-    totals = debts.aggregate(sum_uzs=Sum('amount_uzs'), sum_usd=Sum('amount_usd'))
+    totals = all_history.aggregate(sum_uzs=Sum('amount_uzs'), sum_usd=Sum('amount_usd'))
 
     # YANGI: Shu oydagi xarajatlari
-    month_totals = debts.filter(created_at__gte=month_start).aggregate(
-        m_uzs=Sum('amount_uzs'), 
+    month_totals = all_history.filter(created_at__gte=month_start).aggregate(
+        m_uzs=Sum('amount_uzs'),
         m_usd=Sum('amount_usd')
     )
 
+    search_query = request.GET.get('q', '')
+
+    if search_query:
+        all_history = all_history.filter(items__icontains=search_query)
+
     context = {
         'client': client,
-        'debts': debts[:20], 
+
+        # --- O'ZGARISH SHU YERDA ---
+        # HTML fayl 'history' ni kutmoqda, 'debts' ni emas.
+        'history': all_history[:50],  # 20 ta kamlik qilishi mumkin, 50 qildim
+        # ---------------------------
+
         'total_uzs': totals['sum_uzs'] or 0,
         'total_usd': totals['sum_usd'] or 0,
-        # Oylik statistika
         'month_uzs': month_totals['m_uzs'] or 0,
         'month_usd': month_totals['m_usd'] or 0,
+        'search_query': search_query,
     }
     return render(request, 'client_cabinet.html', context)
-
 
 # core/views.py
 
@@ -403,7 +473,8 @@ def telegram_webhook(request):
                 # B) START
                 elif text == '/start':
                     send_menu(chat_id, request.get_host())
-
+                elif text == '/id' or text == '/myid':
+                    send_tg_msg(chat_id, f"🆔 Sizning ID raqamingiz: <code>{chat_id}</code>")
             # --------------------------------------------------
             # 2. AGAR KNOPKA BOSILSA (CALLBACK_QUERY)
             # --------------------------------------------------
@@ -593,7 +664,7 @@ def send_menu(chat_id, domain):
 @login_required(login_url='/login/')
 def settings_view(request):
     settings_obj = Settings.get_solo()
-    
+
     if request.method == 'POST':
         action = request.POST.get('action')
         
@@ -622,7 +693,8 @@ def settings_view(request):
 
     return render(request, 'settings.html', {
         'settings': settings_obj,
-        'back_url': 'main_menu'
+        'back_url': 'main_menu',
+
     })
 
 
@@ -702,3 +774,4 @@ def client_reset_telegram_view(request, client_id):
 
     messages.warning(request, "Telegram bog'lanishi uzildi. Yangi ssilka yuboring!")
     return redirect('client_edit', client_id=client.id)
+

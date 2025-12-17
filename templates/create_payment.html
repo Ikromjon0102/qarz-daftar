@@ -1,5 +1,11 @@
 {% extends 'base.html' %}
 
+{% block matn %}
+<h3 class="fw-bold ps-1 text-success">
+    <i class="fa-solid fa-hand-holding-dollar"></i> To'lov Qabul Qilish
+</h3>
+{% endblock %}
+
 {% block content %}
 <style>
     /* Yashil mavzu */
@@ -29,9 +35,7 @@
     }
 </style>
 
-<h4 class="mb-4 fw-bold ps-1 text-success">
-    <i class="fa-solid fa-hand-holding-dollar"></i> To'lov Qabul Qilish
-</h4>
+
 
 <form method="POST" id="paymentForm" autocomplete="off">
     {% csrf_token %}
@@ -76,7 +80,25 @@
             <input type="tel" name="amount_usd" class="form-control money-input text-success" placeholder="0">
             <span class="input-group-text">$</span>
         </div>
+<div class="mb-3">
+    <label class="form-label fw-bold text-muted">To'lov turi</label>
+    <div class="d-flex gap-2">
+        <input type="radio" class="btn-check" name="payment_method" id="method1" value="cash" checked>
+        <label class="btn btn-outline-success flex-fill" for="method1">
+            <i class="fa-solid fa-money-bill-wave"></i> Naqd
+        </label>
 
+        <input type="radio" class="btn-check" name="payment_method" id="method2" value="card">
+        <label class="btn btn-outline-primary flex-fill" for="method2">
+            <i class="fa-regular fa-credit-card"></i> Karta
+        </label>
+
+        <input type="radio" class="btn-check" name="payment_method" id="method3" value="click">
+        <label class="btn btn-outline-info flex-fill" for="method3">
+            <i class="fa-solid fa-mobile-screen"></i> Click
+        </label>
+    </div>
+</div>
         <div class="form-text mt-2 text-muted small">
             <i class="fa-solid fa-circle-info"></i> Qaysi valyutada to'lasa, o'shani to'ldiring.
         </div>

@@ -1,8 +1,8 @@
 {% extends 'base.html' %}
+{% block matn %}
 
-{% block content %}
 <div class="d-flex align-items-center mb-4 pt-2">
-    <div class="bg-primary text-white rounded-circle d-flex align-items-center justify-content-center me-3 shadow"
+    <div class="text-white rounded-circle d-flex align-items-center justify-content-center me-3 shadow"
         style="width: 54px; height: 54px; font-size: 24px;">
         {{ client.full_name|slice:":1" }}
     </div>
@@ -13,6 +13,10 @@
         </a>
     </div>
 </div>
+
+{% endblock %}
+{% block content %}
+
 
 <div class="app-card text-white mb-4 shadow-lg position-relative overflow-hidden"
     style="background: radial-gradient(circle at top right, #363795, #005C97); border-radius: 16px; padding: 20px;">

@@ -9,6 +9,7 @@
     </div>
 
     <div class="row g-3">
+
         <div class="col-6">
             <a href="{% url 'create_debt' %}" class="btn-menu bg-primary text-white">
                 <i class="fa-solid fa-cart-plus fa-2x mb-2"></i>
@@ -19,7 +20,7 @@
         <div class="col-6">
             <a href="{% url 'dashboard' %}" class="btn-menu bg-success text-white">
                 <i class="fa-solid fa-users fa-2x mb-2"></i>
-                <span>Qarzdorlar</span>
+                <span>Dashboard</span>
             </a>
         </div>
 
@@ -36,11 +37,27 @@
                 <span>Sozlamalar</span>
             </a>
         </div>
+
+        <div class="col-6">
+            <a href="{% url 'broadcast' %}" class="btn-menu bg-indigo text-white">
+                <i class="fa-solid fa-paper-plane fa-2x mb-2"></i>
+                <span>Xabar yuborish</span>
+            </a>
+        </div>
+
+        <div class="col-6">
+            <a href="{% url 'admin_control' %}" class="btn-menu bg-dark text-white">
+                <i class="fa-solid fa-users-gear fa-2x mb-2"></i>
+                <span>Adminlar</span>
+            </a>
+        </div>
+
     </div>
 
 </div>
 
 <style>
+    /* Umumiy tugma stili */
     .btn-menu {
         display: flex;
         flex-direction: column;
@@ -50,10 +67,19 @@
         border-radius: 20px;
         text-decoration: none;
         height: 140px;
-        transition: transform 0.2s;
+        transition: transform 0.2s ease-in-out;
         box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+        border: none;
     }
 
+    /* Sichqoncha borganda (Hover) */
+    .btn-menu:hover {
+        transform: scale(1.03); /* Biroz kattalashish */
+        box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
+        color: inherit; /* Rang o'zgarmasin */
+    }
+
+    /* Bosganda (Active) */
     .btn-menu:active {
         transform: scale(0.95);
     }
@@ -61,6 +87,12 @@
     .btn-menu span {
         font-weight: 600;
         font-size: 0.9rem;
+        margin-top: 5px;
+    }
+
+    /* Maxsus ranglar */
+    .bg-indigo {
+        background-color: #6610f2 !important; /* Chiroyli binafsha */
     }
 </style>
 {% endblock %}

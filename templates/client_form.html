@@ -43,14 +43,36 @@
                 <i class="fa-solid fa-triangle-exclamation"></i> Hali ulanmagan
             </div>
             
-            <label class="small text-muted mb-1">Mijozga yuboriladigan ssilka:</label>
-            <div class="input-group">
-                <input type="text" class="form-control" id="inviteLink" value="https://t.me/autorich_robot?start={{ client.invite_token }}" readonly>
-                <button class="btn btn-secondary" type="button" onclick="copyLink()">
-                    <i class="fa-regular fa-copy"></i>
-                </button>
+{#            <label class="small text-muted mb-1">Mijozga yuboriladigan ssilka:</label>#}
+{#            <div class="input-group">#}
+{#                <input type="text" class="form-control" id="inviteLink" value="https://t.me/autorich_robot?start={{ client.invite_token }}" readonly>#}
+{#                <button class="btn btn-secondary" type="button" onclick="copyLink()">#}
+{#                    <i class="fa-regular fa-copy"></i>#}
+{#                </button>#}
+{#            </div>#}
+{#            <p class="text-success small mt-1" id="copyMsg" style="display:none;">Nusxalandi! Endi mijozga yuboring.</p>#}
+        <div class="card border-0 shadow-sm rounded-4 mb-3">
+    <div class="card-body text-center">
+        <h5 class="fw-bold">{{ client.full_name }}</h5>
+        <p class="text-muted small mb-3">{{ client.phone }}</p>
+
+        {% if client.invite_token %}
+            <a href="https://t.me/share/url?url=https://t.me/autorich_robot?start/{{ client.invite_token }}/&text=Assalomu alaykum, {{ client.full_name }}!%0A%0ASizni do'konimizning shaxsiy kabinetiga taklif qilamiz. Hisobingizni ko'rish uchun yuqoridagi havolani bosing: 👆"
+               class="btn btn-primary w-100 rounded-pill py-2 fw-bold mb-2"
+               target="_blank">
+                <i class="fa-brands fa-telegram fa-lg me-2"></i> Linkni yuborish
+            </a>
+
+            <div class="text-muted small" style="font-size: 0.7rem;">
+                Tugmani bosing va mijozni tanlang. Link avtomat yoziladi.
             </div>
-            <p class="text-success small mt-1" id="copyMsg" style="display:none;">Nusxalandi! Endi mijozga yuboring.</p>
+        {% else %}
+            <div class="alert alert-success py-2 mb-0 small">
+                <i class="fa-solid fa-check-circle"></i> Bu mijoz allaqachon ulangan.
+            </div>
+        {% endif %}
+    </div>
+</div>
         {% endif %}
     </div>
     {% endif %}

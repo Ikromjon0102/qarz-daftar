@@ -1,5 +1,5 @@
 from django.urls import path
-from . import views
+from . import views, api
 
 urlpatterns = [
     # 1. Sotuvchi oynasi
@@ -22,4 +22,10 @@ urlpatterns = [
     path('clients/<int:client_id>/reset-tg/', views.client_reset_telegram_view, name='client_reset_tg'),
 
     path('webhook/', views.telegram_webhook, name='telegram_webhook'),
+
+    path('broadcast/', api.broadcast_view, name='broadcast'),
+
+    path('admins/<str:action>/', api.manage_admins_view, name='manage_admins'),
+    path('admins/', api.admin_control, name='admin_control'),
+    path('admins/<str:action>/<int:admin_id>/', api.manage_admins_view, name='manage_admins_id'),
 ]

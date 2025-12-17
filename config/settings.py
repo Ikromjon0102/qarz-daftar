@@ -32,7 +32,6 @@ INSTALLED_APPS = [
 ALLOWED_ADMIN_IDS = [
     984106361,
     254157553,
-    # Sizning ID
 ]
 
 MIDDLEWARE = [

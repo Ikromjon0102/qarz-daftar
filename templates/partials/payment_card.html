@@ -1,0 +1,36 @@
+<div class="app-card mb-2 py-3 px-3 border-0 shadow-sm bg-white rounded-4">
+
+    <div class="d-flex justify-content-between align-items-center">
+
+        <div class="d-flex align-items-center" style="min-width: 0;">
+            <div class="me-3 rounded-circle d-flex align-items-center justify-content-center flex-shrink-0"
+                 style="width: 45px; height: 45px; background-color: #d1e7dd;">
+
+                {% if debt.payment_method == 'card' %}
+                    <i class="fa-regular fa-credit-card text-primary"></i>
+                {% elif debt.payment_method == 'click' %}
+                    <i class="fa-solid fa-mobile-screen text-info"></i>
+                {% else %}
+                    <i class="fa-solid fa-money-bill-wave text-success"></i> {% endif %}
+            </div>
+
+            <div class="text-truncate">
+                <div class="fw-bold text-dark text-truncate">{{ debt.items }}</div>
+                <small class="text-muted" style="font-size: 0.75rem;">
+                    {{ debt.created_at|date:"d.m.Y H:i" }}
+                </small>
+            </div>
+        </div>
+
+        <div class="text-end ms-2 flex-shrink-0">
+            {% if debt.amount_uzs != 0 %}
+                <div class="fw-bold text-success">+{{ debt.amount_uzs|stringformat:"+d"|slice:"1:" }}</div>
+            {% endif %}
+
+            {% if debt.amount_usd != 0 %}
+                <div class="fw-bold text-success small">+$ {{ debt.amount_usd|stringformat:"+f"|slice:"1:" }}</div>
+            {% endif %}
+
+        </div>
+    </div>
+</div>

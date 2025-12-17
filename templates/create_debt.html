@@ -1,4 +1,7 @@
 {% extends 'base.html' %}
+{% block matn %}
+<h3 class="fw-bold m-0 text-primary"><i class="fas fa-receipt"></i>  Nasiya Yozish</h3>
+{% endblock %}
 
 {% block content %}
 <style>
@@ -45,8 +48,6 @@
         border: none;
     }
 </style>
-
-<h4 class="mb-3 fw-bold ps-1">Nasiya Yozish</h4>
 
 <form method="POST" id="debtForm" autocomplete="off">
     {% csrf_token %}

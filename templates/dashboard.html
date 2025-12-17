@@ -1,10 +1,9 @@
 {% extends 'base.html' %}
+{% block matn %}
+    <h3 class="fw-bold m-0"><i class="fa-solid fa-chart-pie"></i> Umumiy Holat</h3>
+{% endblock %}
 
 {% block content %}
-<div class="d-flex justify-content-between align-items-center mb-3 ps-1">
-    <h4 class="fw-bold m-0"><i class="fa-solid fa-chart-pie"></i> Umumiy Holat</h4>
-    <span class="badge bg-light text-dark border">{{ clients|length }} ta mijoz</span>
-</div>
 
 <h6 class="text-muted small text-uppercase fw-bold mb-2 ps-1">📊 Bu oylik ko'rsatkichlar</h6>
 
@@ -12,7 +11,7 @@
     <div class="col-12">
         <span class="badge bg-primary bg-opacity-10 text-primary border border-primary border-opacity-10">
             📦 Nasiyaga sotildi (Tovar)
-        </span>
+        </span> | <span class="badge bg-light text-dark border">{{ clients|length }} ta mijoz</span>
     </div>
     <div class="col-6">
         <div class="p-3 bg-white rounded-3 shadow-sm border border-primary border-opacity-10">

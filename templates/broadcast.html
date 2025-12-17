@@ -1,0 +1,49 @@
+{% extends 'base.html' %}
+
+{% block matn %}
+    <h3 class="fw-bold m-0"><i class="fa-solid fa-bullhorn text-primary"></i> Ommaviy Xabar</h3>
+{% endblock %}
+
+{% block content %}
+
+<div class="container mt-4" style="max-width: 600px;">
+    <div class="card border-0 shadow-lg rounded-4 overflow-hidden">
+        <div class="card-body p-4">
+            
+            <div class="alert alert-info d-flex align-items-center rounded-3">
+                <i class="fa-solid fa-circle-info me-3 fa-lg"></i>
+                <div>
+                    Bu xabar botga ulangan <b>BARCHA</b> mijozlarga yuboriladi. 
+                    Iltimos, spam yubormang!
+                </div>
+            </div>
+
+            <form method="post">
+                {% csrf_token %}
+                
+                <div class="mb-3">
+                    <label class="form-label fw-bold text-muted">Xabar matni:</label>
+                    <textarea name="message" 
+                              class="form-control form-control-lg bg-light border-0 rounded-3" 
+                              rows="6" 
+                              placeholder="Assalomu alaykum! Hurmatli mijoz..." 
+                              required></textarea>
+                </div>
+
+                <button type="submit" class="btn btn-primary w-100 py-3 rounded-3 fw-bold shadow-sm send-btn">
+                    <i class="fa-regular fa-paper-plane me-2"></i> Yuborish
+                </button>
+            </form>
+
+        </div>
+    </div>
+</div>
+
+<script>
+    document.querySelector('form').onsubmit = function() {
+        var btn = document.querySelector('.send-btn');
+        btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Yuborilmoqda...';
+        btn.disabled = true;
+    };
+</script>
+{% endblock %}

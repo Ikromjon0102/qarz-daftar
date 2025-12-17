@@ -1,0 +1,36 @@
+<div class="app-card mb-2 py-3 px-3 border-0 shadow-sm rounded-4 position-relative"
+     style="background-color: {% if debt.status == 'pending' %}#fff3cd{% else %}#fff{% endif %};">
+
+    <div class="d-flex justify-content-between align-items-center">
+
+        <div class="d-flex align-items-center" style="min-width: 0;">
+            <div class="me-3 rounded-circle d-flex align-items-center justify-content-center flex-shrink-0"
+                 style="width: 45px; height: 45px; background-color: #cfe2ff;">
+                {% if debt.status == 'pending' %}
+                    <i class="fa-regular fa-clock text-warning"></i>
+                {% else %}
+                    <i class="fa-solid fa-bag-shopping text-primary"></i>
+                {% endif %}
+            </div>
+
+            <div class="text-truncate">
+                <div class="fw-bold text-dark text-truncate">{{ debt.items }}</div>
+                <small class="text-muted" style="font-size: 0.75rem;">
+                    {{ debt.created_at|date:"d.m.Y H:i" }}
+                    {% if debt.status == 'pending' %}
+                        <span class="badge bg-warning text-dark ms-1" style="font-size: 0.6rem;">Kutilmoqda</span>
+                    {% endif %}
+                </small>
+            </div>
+        </div>
+
+        <div class="text-end ms-2 flex-shrink-0">
+            {% if debt.amount_uzs > 0 %}
+                <div class="fw-bold text-danger">-{{ debt.amount_uzs|floatformat:0 }}</div>
+            {% endif %}
+            {% if debt.amount_usd > 0 %}
+                <div class="fw-bold text-danger small">-${{ debt.amount_usd|floatformat:2 }}</div>
+            {% endif %}
+        </div>
+    </div>
+</div>

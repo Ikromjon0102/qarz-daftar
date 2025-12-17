@@ -1,6 +1,6 @@
 # core/admin.py
 from django.contrib import admin
-from .models import Client, Debt
+from .models import Client, Debt, AllowedAdmin
 
 @admin.register(Client)
 class ClientAdmin(admin.ModelAdmin):
@@ -21,3 +21,6 @@ class ClientAdmin(admin.ModelAdmin):
 class DebtAdmin(admin.ModelAdmin):
     list_display = ('client', 'amount_uzs', 'amount_usd', 'status', 'created_at')
     list_filter = ('status', 'created_at')
+
+
+admin.site.register(AllowedAdmin)
