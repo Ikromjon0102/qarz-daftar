@@ -1,109 +1,36 @@
-# import time  # Vaqtni to'xtatib turish uchun
-# from django.contrib import messages  # Ekranga chiroyli xabar chiqarish uchun
-# from django.contrib.auth.decorators import login_required
-# from django.shortcuts import redirect, render
-#
-# from core.models import Client
-# from core.views import send_tg_msg
-#
-#
-# @login_required(login_url='/login/')  # Faqat admin kira olsin
-# def broadcast_view(request):
-#     if request.method == 'POST':
-#         text = request.POST.get('message')
-#
-#         if text:
-#             # 1. Telegrami bor mijozlarni olamiz
-#             # telegram_id__isnull=False -> Telegrami borlar
-#             # exclude(telegram_id=0) -> ID si 0 bo'lmaganlar
-#             clients = Client.objects.filter(telegram_id__isnull=False).exclude(telegram_id=0)
-#
-#             success_count = 0
-#             fail_count = 0
-#
-#             for client in clients:
-#                 try:
-#                     # Xabarni yuboramiz
-#                     send_tg_msg(client.telegram_id, text)
-#                     success_count += 1
-#
-#                     # Telegram serverini "qiynamaslik" uchun 0.05 sekund kutamiz
-#                     time.sleep(0.05)
-#                 except Exception as e:
-#                     fail_count += 1
-#                     print(f"Xatolik ({client.full_name}): {e}")
-#
-#             # 2. Natijani chiqaramiz
-#             messages.success(request, f"✅ Xabar yuborildi: {success_count} ta muvaffaqiyatli, {fail_count} ta xato.")
-#             return redirect('main_menu')
-#
-#     return render(request, 'broadcast.html', {'back_url':'back_url'})
-
-
 import threading  # <--- YANGI KUCH
 import time
 from django.contrib import messages
+from django.contrib.auth.models import User
 from django.shortcuts import render, redirect
 from django.contrib.auth.decorators import login_required
-
-from config import settings
-from .models import Client
-from .views import send_tg_msg
-
-
-# send_tg_msg funksiyasini chaqirib olish kerak (agar pastda bo'lsa, tepaga olib chiqing yoki shu faylda ekanligiga ishonch hosil qiling)
-
-# --- ORQA FONDA ISHLAYDIGAN FUNKSIYA ---
-def send_broadcast_thread(text, admin_tg_id=None):
-    """Bu funksiya foydalanuvchini kuttirmaydi, orqada ishlaydi"""
-    clients = Client.objects.filter(telegram_id__isnull=False).exclude(telegram_id=0)
-
-    success = 0
-    fail = 0
-
-    for client in clients:
-        try:
-            send_tg_msg(client.telegram_id, text)
-            success += 1
-            time.sleep(0.05)  # Spam bo'lmasligi uchun pauza
-        except:
-            fail += 1
-
-    # Ish tugagach, ADMINGA hisobot yuboramiz (Telegramdan)
-    if admin_tg_id:
-        report = (
-            f"✅ <b>Tarqatma tugadi!</b>\n\n"
-            f"Jami urinish: {success + fail}\n"
-            f"Yuborildi: {success}\n"
-            f"O'xshamadi: {fail}"
-        )
-        send_tg_msg(admin_tg_id, report)
-    print(f"Broadcast tugadi: {success} ok, {fail} error")
+from .models import Client, UserProfile, Shop, Settings
+from .views import send_tg_msg, get_current_shop
+from django.db import transaction
 
 
-# --- ASOSIY VIEW ---
 @login_required(login_url='/auth/telegram-login/')
 def broadcast_view(request):
+    shop = get_current_shop(request)
     if request.method == 'POST':
         text = request.POST.get('message')
-
         if text:
-            # Hozirgi adminning telegram ID sini olamiz (Hisobot uchun)
-            # Agar superuser bo'lsa va Client modeliga bog'lanmagan bo'lsa,
-            # settings.ALLOWED_ADMIN_IDS dan olish mumkin.
-            # Hozircha oddiyroq qilib settingsdan olamiz:
-            admin_id = settings.ALLOWED_ADMIN_IDS[0]
+            # Faqat shu do'kon mijozlariga
+            clients = Client.objects.filter(shop=shop, telegram_id__isnull=False).exclude(telegram_id=0)
 
-            # THREAD (IP) ni ishga tushiramiz
-            task = threading.Thread(
-                target=send_broadcast_thread,
-                args=(text, admin_id)
-            )
-            task.start()  # <-- KETDI! Saytni ushlab turmaydi
+            def send_thread(txt, cl_list):
+                for c in cl_list:
+                    try:
+                        send_tg_msg(c.telegram_id, txt)
+                        time.sleep(0.05)
+                    except:
+                        pass
 
-            # Ekranga darrov javob qaytaramiz
-            messages.success(request, "🚀 Xabar yuborish fon rejimida boshlandi! Natijani Telegramda olasiz.")
+            threading.Thread(target=send_thread, args=(text, clients)).start()
+            messages.success(request, "Xabar yuborish boshlandi!")
             return redirect('dashboard')
+
+    # return render(request, 'broadcast.html')
 
     return render(request, 'broadcast.html', {'back_url': 'main_menu',})
 
@@ -137,8 +64,48 @@ def manage_admins_view(request, action=None, admin_id=None):
 
 
 def admin_control(request):
-    allowed_admins = AllowedAdmin.objects.all().order_by('-created_at')  # <--- QO'SHILDI
+    shop = get_current_shop(request)
+    allowed_admins = AllowedAdmin.objects.filter(shop=shop).order_by('-created_at')
     return render(request, 'admin_control.html', {
         'back_url': 'main_menu',
         'allowed_admins': allowed_admins,
     })
+
+
+def signup_view(request):
+    if request.method == 'POST':
+        shop_name = request.POST.get('shop_name')
+        admin_name = request.POST.get('admin_name')
+        telegram_id = request.POST.get('telegram_id')
+
+        # Validatsiya
+        if User.objects.filter(username=telegram_id).exists():
+            messages.error(request, "Bu Telegram ID bilan allaqachon do'kon ochilgan!")
+            return redirect('landing_page')
+
+        try:
+            with transaction.atomic():  # Agar bittasi o'xshamasa, hammasini bekor qiladi
+                # 1. User yaratamiz
+                user = User.objects.create_user(username=telegram_id, password='1')  # Parol shartli
+
+                # 2. Do'kon yaratamiz
+                shop = Shop.objects.create(name=shop_name, owner=user)
+
+                # 3. Profil va Adminlik
+                UserProfile.objects.create(user=user, shop=shop, role='admin')
+                AllowedAdmin.objects.create(shop=shop, name=admin_name, telegram_id=telegram_id)
+
+                # 4. Sozlamalar
+                Settings.objects.create(shop=shop, usd_rate=12800)
+
+            # Muvaffaqiyatli!
+            return render(request, 'signup_success.html', {
+                'shop_name': shop_name,
+                'bot_username': 'SizningBotingizUsername'  # Bot username shu yerga yoziladi
+            })
+
+        except Exception as e:
+            messages.error(request, f"Xatolik yuz berdi: {e}")
+            return redirect('landing_page')
+
+    return redirect('landing_page')

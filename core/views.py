@@ -1,29 +1,54 @@
+import json
 import requests
+import threading
+import time
 from django.shortcuts import render, get_object_or_404, redirect
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
-from .models import Client, Debt
 from django.utils import timezone
 from datetime import timedelta
-from .models import Settings
 from django.contrib.auth import login
 from django.contrib.auth.models import User
 from django.views.decorators.csrf import csrf_exempt
 from django.db.models import Sum, Q
+from django.conf import settings
+from django.http import JsonResponse, HttpResponse
+
+
+# Modellar
+from .models import Client, Debt, Settings, AllowedAdmin, Shop, UserProfile
+from store.models import Order, Product  # Agar kerak bo'lsa
+
+
+def get_current_shop(request):
+    """
+    Tizimga kirgan adminning do'konini qaytaradi.
+    """
+    if not request.user.is_authenticated:
+        return None
+    try:
+        # UserProfile orqali bog'langan do'konni olamiz
+        return request.user.profile.shop
+    except Exception:
+        # Agar superuser bo'lsa va profili bo'lmasa (Admin panel uchun)
+        if request.user.is_superuser:
+            # Vaqtincha birinchi do'konni qaytarib turamiz yoki None
+            return Shop.objects.first()
+        return None
+
 
 def login_page_view(request):
     if request.user.is_authenticated:
         return redirect('main_menu')
-    return render(request, 'login_loader.html')
-
-
-from .models import AllowedAdmin  # User va yangi model
-from django.db.models import Q
+    return render(request, 'landing.html')
 
 
 # 1. LOGIN LOGIKASINI SODDALASHTIRAMIZ
 @csrf_exempt
 def telegram_auth_view(request):
+    """
+    Telegram orqali kirishni tekshirish (SaaS versiya)
+    """
     if request.method == 'GET':
         return render(request, 'login_loader.html')
 
@@ -32,22 +57,23 @@ def telegram_auth_view(request):
             data = json.loads(request.body)
             telegram_id = int(data.get('telegram_id'))
 
-            # --- YANGI TEKSHIRUV ---
-            # 1. Settingsdagi Glavniy Adminmi?
-            is_main_admin = telegram_id in settings.ALLOWED_ADMIN_IDS
+            # 1. XODIM / ADMIN SIFATIDA KIRISH
+            # Biz "Admin qo'shish"da User username=telegram_id qilib ochganmiz
+            user = User.objects.filter(username=str(telegram_id)).first()
+            if user:
+                login(request, user)
+                return JsonResponse({'status': 'ok', 'redirect_url': '/'})
 
-            # 2. Yoki biz qo'shgan Xodimmi?
-            is_staff = AllowedAdmin.objects.filter(telegram_id=telegram_id).exists()
-
-            if is_main_admin or is_staff:
-                # Bazadagi haqiqiy Superuser (admin) nomidan kiritib yuboramiz
-                # Shunda har biriga alohida User ochish shart emas
+            # 2. PLATFORMA EGASI (Superuser)
+            if telegram_id in settings.ALLOWED_ADMIN_IDS:
                 superuser = User.objects.filter(is_superuser=True).first()
                 if superuser:
                     login(request, superuser)
                     return JsonResponse({'status': 'ok', 'redirect_url': '/'})
 
-            # 3. Agar admin bo'lmasa, mijozligini tekshiramiz
+            # 3. MIJOZ SIFATIDA KIRISH
+            # Mijoz qaysi do'konniki bo'lsa ham kiraveradi,
+            # lekin client_cabinet faqat o'ziga tegishli narsani ko'rsatadi.
             client = Client.objects.filter(telegram_id=telegram_id).first()
             if client:
                 request.session['client_id'] = client.id
@@ -63,171 +89,156 @@ def telegram_auth_view(request):
 
 @login_required(login_url='/login/')
 def main_menu_view(request):
-    allowed_admins = AllowedAdmin.objects.all().order_by('-created_at')
+    # Faqat o'z do'koniga tegishli narsalar
+    shop = get_current_shop(request)
+    if not shop:
+        return HttpResponse("Sizga do'kon biriktirilmagan!")
 
     return render(request, 'main_menu.html', {
-        'allowed_admins': allowed_admins,
+        'shop': shop
     })
+
+
 
 @login_required(login_url='/login/')
 def create_debt_view(request):
+    shop = get_current_shop(request)
     selected_client = None
+
     client_id_param = request.GET.get('client_id')
     if client_id_param:
-        selected_client = Client.objects.filter(id=client_id_param).first()
+        # Xavfsizlik: Faqat o'z do'koni mijozini tanlay olsin
+        selected_client = Client.objects.filter(id=client_id_param, shop=shop).first()
 
     if request.method == 'POST':
         client_id = request.POST.get('client_id')
-        
+
         # Ro'yxatlar
         names = request.POST.getlist('item_name[]')
         qtys = request.POST.getlist('item_qty[]')
         prices = request.POST.getlist('item_price[]')
         currencies = request.POST.getlist('item_currency[]')
-        
-        # Summalarni to'g'ri formatga o'tkazish
+
         try:
             total_uzs = float(request.POST.get('total_uzs', 0))
-        except (ValueError, TypeError):
+        except:
             total_uzs = 0
-            
         try:
             total_usd = float(request.POST.get('total_usd', 0))
-        except (ValueError, TypeError):
+        except:
             total_usd = 0
 
         if client_id and names:
-            client = get_object_or_404(Client, id=client_id)
-            
+            client = get_object_or_404(Client, id=client_id, shop=shop)
+
             items_desc_list = []
-            
             for name, qty, price, curr in zip(names, qtys, prices, currencies):
                 if name:
                     q = float(qty)
                     p = float(price)
-                    # Butun son bo'lsa .0 ni olib tashlaymiz
                     q = int(q) if q.is_integer() else q
                     p = int(p) if p.is_integer() else p
-
                     if curr == 'USD':
-                        items_desc_list.append(f"🔹 {name}: {q}ta x ${p} = ${q*p}")
+                        items_desc_list.append(f"🔹 {name}: {q}ta x ${p} = ${q * p}")
                     else:
-                        items_desc_list.append(f"🔸 {name}: {q}ta x {p:,} = {q*p:,}")
+                        items_desc_list.append(f"🔸 {name}: {q}ta x {p:,} = {q * p:,}")
 
             full_description = "\n".join(items_desc_list)
 
-            # Bazaga yozish
+            # BAZAGA YOZISH (shop=shop)
             debt = Debt.objects.create(
+                shop=shop,  # <--- MUHIM
                 client=client,
                 amount_uzs=total_uzs,
                 amount_usd=total_usd,
                 items=full_description,
-                status='pending' # Bot orqali tasdiqlanishi kerak
+                status='pending'
             )
-            
-            # Signal orqali Telegramga xabar ketadi...
+
             messages.success(request, "Nasiya yuborildi!")
-            
-            # MUHIM: Ish bitgach, yana o'sha mijozning profiliga qaytamiz
             return redirect('admin_client_detail', client_id=client.id)
 
-    clients = Client.objects.all().order_by('full_name')
-    current_rate = Settings.get_solo().usd_rate
+    # Faqat shu do'kon mijozlari
+    clients = Client.objects.filter(shop=shop).order_by('full_name')
+
+    # Do'kon sozlamalaridan kursni olamiz
+    settings_obj, _ = Settings.objects.get_or_create(shop=shop)
+    current_rate = settings_obj.usd_rate
+
     return render(request, 'create_debt.html', {
-        'clients': clients, 
+        'clients': clients,
         'back_url': 'main_menu',
         'selected_client': selected_client,
-        'current_rate': current_rate # <--- Shablonga uzatamiz
+        'current_rate': current_rate
     })
 
-
-@login_required(login_url='/auth/telegram-login/')
+@login_required(login_url='/login/')
 def create_payment_view(request):
+    shop = get_current_shop(request)
     selected_client = None
-    client_id_param = request.GET.get('client_id')
 
-    # Agar URLda ?client_id=5 deb kelsa, o'sha mijozni tanlab qo'yamiz
+    client_id_param = request.GET.get('client_id')
     if client_id_param:
-        selected_client = Client.objects.filter(id=client_id_param).first()
+        selected_client = Client.objects.filter(id=client_id_param, shop=shop).first()
 
     if request.method == 'POST':
         client_id = request.POST.get('client_id')
-        payment_method = request.POST.get('payment_method')  # <--- YANGI
-        note = request.POST.get('note')  # <--- YANGI (Izoh)
+        payment_method = request.POST.get('payment_method')
+        note = request.POST.get('note')
 
-        # Summalarni olamiz
         try:
             amount_uzs = float(request.POST.get('amount_uzs') or 0)
-        except ValueError:
+        except:
             amount_uzs = 0
-
         try:
             amount_usd = float(request.POST.get('amount_usd') or 0)
-        except ValueError:
+        except:
             amount_usd = 0
 
         if client_id and (amount_uzs > 0 or amount_usd > 0):
-            client = get_object_or_404(Client, id=client_id)
+            client = get_object_or_404(Client, id=client_id, shop=shop)
 
-            # 1. Chiroyli tavsif (Description) yasaymiz
-            # Masalan: "💵 To'lov (Click)"
-            method_names = {
-                'cash': 'Naqd',
-                'card': 'Karta',
-                'click': 'Click',
-                'transfer': 'Perechislenie'
-            }
+            method_names = {'cash': 'Naqd', 'card': 'Karta', 'click': 'Click', 'transfer': 'Perechislenie'}
             method_display = method_names.get(payment_method, '')
-
             description = f"💵 To'lov ({method_display})" if method_display else "💵 To'lov"
+            if note: description += f" | {note}"
 
-            # Agar izoh bo'lsa, uni ham qo'shamiz
-            if note:
-                description += f" | {note}"
-
-            # 2. Bazaga saqlaymiz (Minus bilan)
             Debt.objects.create(
+                shop=shop,  # <--- MUHIM
                 client=client,
                 amount_uzs=-amount_uzs,
                 amount_usd=-amount_usd,
-                items=description,  # <--- Yangilangan matn
+                items=description,
                 status='confirmed',
                 transaction_type='payment',
-                payment_method=payment_method  # <--- Bazaga yozamiz
+                payment_method=payment_method
             )
 
-            current_balance = Debt.objects.filter(client=client, status='confirmed').aggregate(Sum('amount_uzs'))['amount_uzs__sum'] or 0
-
-            # B) Agar mijozning Telegrami bo'lsa, xabar yuboramiz
+            # Telegram xabar va boshqalar...
+            current_balance = \
+            Debt.objects.filter(shop=shop, client=client, status='confirmed').aggregate(Sum('amount_uzs'))[
+                'amount_uzs__sum'] or 0
             if client.telegram_id:
                 try:
-                    msg = f"💸 <b>To'lov qabul qilindi!</b>\n\n"
-                    msg += f"👤 Mijoz: {client.full_name}\n"
-                    msg += f"💰 To'landi: <b>{amount_uzs:,.0f} so'm</b> ({method_display})\n"
-
-                    if note:
-                        msg += f"📝 Izoh: {note}\n"
-
+                    msg = f"💸 <b>To'lov qabul qilindi!</b>\n\n👤 Mijoz: {client.full_name}\n💰 To'landi: <b>{amount_uzs:,.0f} so'm</b> ({method_display})\n"
+                    if note: msg += f"📝 Izoh: {note}\n"
                     msg += "➖➖➖➖➖➖➖➖\n"
                     msg += f"📉 Qolgan qarz: <b>{current_balance:,.0f} so'm</b>"
-
-                    # Xabarni yuboramiz (funksiya o'sha faylda bor deb hisoblaymiz)
                     send_tg_msg(client.telegram_id, msg)
-
                 except Exception as e:
-                    print(f"Telegram xato: {e}")
-            messages.success(request, f"✅ {client.full_name} dan to'lov qabul qilindi!")
+                    print(e)
 
-            # To'g'ridan-to'g'ri mijoz sahifasiga qaytamiz
+            messages.success(request, f"✅ {client.full_name} dan to'lov qabul qilindi!")
             return redirect('admin_client_detail', client_id=client.id)
 
-    clients = Client.objects.all().order_by('full_name')
+    clients = Client.objects.filter(shop=shop).order_by('full_name')
 
     return render(request, 'create_payment.html', {
         'clients': clients,
         'back_url': 'main_menu',
         'selected_client': selected_client
     })
+
 
 @login_required(login_url='/login/')
 def manage_debt_view(request, debt_uuid, action):
@@ -299,52 +310,57 @@ def debt_detail_view(request, debt_uuid):
 
 @login_required(login_url='/login/')
 def dashboard_view(request):
+    shop = get_current_shop(request)
+    if not shop: return redirect('login_page')
+
     now = timezone.now()
     month_start = now.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
-    allowed_admins = AllowedAdmin.objects.all().order_by('-created_at')
-    # 1. CLIENTLAR RO'YXATI (BALANS) - Bu o'zgarishsiz qoladi
-    # Bu yerda plyus va minus birga hisoblanaveradi, chunki bu QARZ QOLDIG'I
-    clients = Client.objects.annotate(
+
+    # 1. DO'KON ADMINLARI
+    allowed_admins = AllowedAdmin.objects.filter(shop=shop).order_by('-created_at')
+
+    # 2. CLIENTLAR VA BALANS (Faqat shu do'kon uchun)
+    clients = Client.objects.filter(shop=shop).annotate(
         total_debt_uzs=Sum('debt__amount_uzs', filter=Q(debt__status='confirmed')),
         total_debt_usd=Sum('debt__amount_usd', filter=Q(debt__status='confirmed'))
     ).order_by('-total_debt_uzs')
 
-    # 2. STATISTIKA (ALOHIDA-ALOHIDA)
-    
-    # A) BU OYLIK NASIYA SAVDO (Faqat 'debt' turi)
-    # Bu do'kondan qancha tovar chiqib ketganini bildiradi
+    # 3. STATISTIKA
+    # A) Savdo (Nasiya)
     monthly_sales_uzs = Debt.objects.filter(
-        status='confirmed', 
-        transaction_type='debt', 
+        shop=shop,
+        status='confirmed',
+        transaction_type='debt',
         created_at__gte=month_start
     ).aggregate(Sum('amount_uzs'))['amount_uzs__sum'] or 0
-    
+
     monthly_sales_usd = Debt.objects.filter(
-        status='confirmed', 
-        transaction_type='debt', 
+        shop=shop,
+        status='confirmed',
+        transaction_type='debt',
         created_at__gte=month_start
     ).aggregate(Sum('amount_usd'))['amount_usd__sum'] or 0
 
-    # B) BU OYLIK TUSHUM (Faqat 'payment' turi)
-    # Bu cho'ntakka qancha pul kirganini bildiradi. 
-    # Bazada minus turibdi, shuning uchun abs() qilib musbat qilamiz.
+    # B) Tushum (To'lov)
     monthly_income_uzs = Debt.objects.filter(
-        status='confirmed', 
-        transaction_type='payment', 
+        shop=shop,
+        status='confirmed',
+        transaction_type='payment',
         created_at__gte=month_start
     ).aggregate(Sum('amount_uzs'))['amount_uzs__sum'] or 0
-    
+
     monthly_income_usd = Debt.objects.filter(
-        status='confirmed', 
-        transaction_type='payment', 
+        shop=shop,
+        status='confirmed',
+        transaction_type='payment',
         created_at__gte=month_start
     ).aggregate(Sum('amount_usd'))['amount_usd__sum'] or 0
 
     stats = {
         'sales_uzs': monthly_sales_uzs,
         'sales_usd': monthly_sales_usd,
-        'income_uzs': abs(monthly_income_uzs), # Musbat qilamiz
-        'income_usd': abs(monthly_income_usd), # Musbat qilamiz
+        'income_uzs': abs(monthly_income_uzs),
+        'income_usd': abs(monthly_income_usd),
     }
 
     return render(request, 'dashboard.html', {
@@ -352,31 +368,27 @@ def dashboard_view(request):
         'stats': stats,
         'back_url': 'main_menu',
         'allowed_admins': allowed_admins,
+        'shop': shop
     })
+
 
 @login_required(login_url='/login/')
 def admin_client_detail_view(request, client_id):
-    client = get_object_or_404(Client, id=client_id)
-    
-    # Hamma operatsiyalar (Pendinglar ham ko'rinsin, admin bilsin)
+    shop = get_current_shop(request)
+    # Faqat o'z mijozini ko'ra olsin
+    client = get_object_or_404(Client, id=client_id, shop=shop)
+
     debts = Debt.objects.filter(client=client).order_by('-created_at')
-    
-    # Balansni hisoblaymiz (Faqat Confirmed)
+
     confirmed_debts = debts.filter(status='confirmed')
-    stats = confirmed_debts.aggregate(
-        sum_uzs=Sum('amount_uzs'),
-        sum_usd=Sum('amount_usd')
-    )
-    
-    total_uzs = stats['sum_uzs'] or 0
-    total_usd = stats['sum_usd'] or 0
+    stats = confirmed_debts.aggregate(sum_uzs=Sum('amount_uzs'), sum_usd=Sum('amount_usd'))
 
     return render(request, 'admin_client_detail.html', {
         'client': client,
         'debts': debts,
-        'total_uzs': total_uzs,
-        'total_usd': total_usd,
-        'back_url': 'dashboard' # Orqaga qaytish Dashboardga
+        'total_uzs': stats['sum_uzs'] or 0,
+        'total_usd': stats['sum_usd'] or 0,
+        'back_url': 'dashboard'
     })
 
 
@@ -442,125 +454,82 @@ def telegram_webhook(request):
     if request.method == 'POST':
         try:
             data = json.loads(request.body)
-            
-            # --------------------------------------------------
-            # 1. AGAR ODDIY XABAR KELSA (MESSAGE)
-            # --------------------------------------------------
+
             if 'message' in data:
                 chat_id = data['message']['chat']['id']
                 text = data['message'].get('text', '')
 
-                # A) LOGIN (SSILKA)
                 if text.startswith('/start '):
                     token = text.split(' ')[1]
-                    try:
-                        client = Client.objects.filter(invite_token=token).first()
-                        if client:
-                            client.telegram_id = chat_id
-                            client.invite_token = None
-                            client.save()
-                            msg = f"🎉 <b>Tabriklaymiz, {client.full_name}!</b>\n\nSizning hisobingiz muvaffaqiyatli ulandi."
-                        else:
-                            msg = "❌ <b>Xatolik!</b>\nBu ssilka eskirgan yoki noto'g'ri."
-                    except Exception as e:
-                        msg = "❌ Tizim xatoligi."
-                        print(f"Link error: {e}")
-                    
-                    send_tg_msg(chat_id, msg)
+                    # Token orqali mijozni topamiz (u qaysi do'konda bo'lsa ham)
+                    client = Client.objects.filter(invite_token=token).first()
                     if client:
+                        client.telegram_id = chat_id
+                        client.invite_token = None
+                        client.save()
+                        send_tg_msg(chat_id, f"🎉 {client.shop.name}: Xush kelibsiz, {client.full_name}!")
                         send_menu(chat_id, request.get_host())
-
-                # B) START
+                    else:
+                        send_tg_msg(chat_id, "❌ Xato ssilka")
                 elif text == '/start':
                     send_menu(chat_id, request.get_host())
-                elif text == '/id' or text == '/myid':
-                    send_tg_msg(chat_id, f"🆔 Sizning ID raqamingiz: <code>{chat_id}</code>")
-            # --------------------------------------------------
-            # 2. AGAR KNOPKA BOSILSA (CALLBACK_QUERY)
-            # --------------------------------------------------
+                elif text in ['/id', '/myid']:
+                    send_tg_msg(chat_id, f"🆔: {chat_id}")
+
             elif 'callback_query' in data:
                 callback = data['callback_query']
+                data_text = callback['data']
                 chat_id = callback['message']['chat']['id']
                 message_id = callback['message']['message_id']
-                data_text = callback['data'] # Masalan: "order_accept_5"
-                callback_id = callback['id']
 
-                print(f"🔘 Callback keldi: {data_text}") # DEBUG UCHUN
-
-                # A) NASIYAGA YOZISH (TASDIQLASH)
                 if data_text.startswith('order_accept_'):
                     order_id = data_text.split('_')[2]
                     handle_order_accept(chat_id, message_id, order_id)
-
-                # B) BEKOR QILISH (OTMEN)
                 elif data_text.startswith('order_reject_'):
                     order_id = data_text.split('_')[2]
                     handle_order_reject(chat_id, message_id, order_id)
-                
-                # Telegramga "Knopka bosildi" deb javob qaytaramiz (Loading to'xtaydi)
-                answer_callback(callback_id)
+
+                answer_callback(callback['id'])
 
             return JsonResponse({'status': 'ok'})
-
         except Exception as e:
-            print(f"❌ Webhook Glavnaya Xatolik: {e}") # Xatoni terminalda ko'rish uchun
+            print(e)
             return JsonResponse({'status': 'error'})
-            
     return JsonResponse({'status': 'error'}, status=405)
-
-
 # --- LOGIKA FUNKSIYALARI ---
 
 def handle_order_accept(chat_id, message_id, order_id):
-    print(f"✅ Order #{order_id} qabul qilinmoqda...")
     try:
         order = Order.objects.get(id=order_id)
-        
-        # Agar status 'new' bo'lmasa, demak allaqachon bosilgan
         if order.status != 'new':
-            print("⚠️ Bu order allaqachon o'zgargan")
-            answer_callback_text(chat_id, "Bu buyurtma allaqachon ishlov berilgan!")
-            # Xabarni yangilab qo'yamiz baribir
-            edit_tg_message(chat_id, message_id, f"⚠️ Bu buyurtma holati: {order.get_status_display()}")
             return
 
-        # 1. Order statusini o'zgartiramiz
         order.status = 'accepted'
         order.save()
-        
-        # 2. QARZ (DEBT) YARATAMIZ 
-        items_desc = f"🛒 Buyurtma #{order.id} (Online):\n"
+
+        items_desc = f"🛒 Buyurtma #{order.id}:\n"
         for item in order.orderitem_set.all():
             p_name = item.product.name if item.product else "Noma'lum"
             items_desc += f"- {p_name} ({item.qty}x)\n"
-            
+
+        # DEBT YARATISH (shop ni qo'shamiz)
         Debt.objects.create(
+            shop=order.shop,  # <--- MUHIM
             client=order.client,
             amount_uzs=order.total_price,
-            amount_usd=0,
             items=items_desc,
             status='confirmed',
             transaction_type='debt'
         )
-        print("✅ Debt yaratildi!")
-        
-        # 3. Xabarni yangilaymiz
-        new_text = (
-            f"✅ <b>QABUL QILINDI</b>\n"
-            f"👤 {order.client.full_name}\n"
-            f"💰 {order.total_price:,.0f} so'm nasiyaga yozildi."
-        )
-        edit_tg_message(chat_id, message_id, new_text)
-        
-        # 4. Mijozga xabar (Ixtiyoriy)
+
+        edit_tg_message(chat_id, message_id, f"✅ Qabul qilindi\n👤 {order.client.full_name}")
         if order.client.telegram_id:
-             send_tg_msg(order.client.telegram_id, f"✅ Buyurtmangiz (#{order.id}) qabul qilindi.")
+            send_tg_msg(order.client.telegram_id, f"✅ Buyurtmangiz (#{order.id}) qabul qilindi.")
 
     except Order.DoesNotExist:
-        print("❌ Order topilmadi bazadan")
-        edit_tg_message(chat_id, message_id, "❌ Buyurtma topilmadi.")
+        pass
     except Exception as e:
-        print(f"❌ handle_order_accept ichida xato: {e}")
+        print(e)
 
 
 def handle_order_reject(chat_id, message_id, order_id):
@@ -663,96 +632,93 @@ def send_menu(chat_id, domain):
 
 @login_required(login_url='/login/')
 def settings_view(request):
-    settings_obj = Settings.get_solo()
+    shop = get_current_shop(request)
+    # Do'kon uchun alohida settings olamiz
+    settings_obj, created = Settings.objects.get_or_create(shop=shop)
 
     if request.method == 'POST':
         action = request.POST.get('action')
-        
-        # 1. KUSNI YANGILASH
+
         if action == 'update_rate':
             new_rate = request.POST.get('usd_rate')
             if new_rate:
                 settings_obj.usd_rate = new_rate
                 settings_obj.save()
-                messages.success(request, f"Kurs yangilandi: 1$ = {new_rate} so'm")
+                messages.success(request, f"Kurs yangilandi: {new_rate}")
 
-        # 2. YANGI ADMIN QO'SHISH (ID orqali)
         elif action == 'add_admin':
-            new_id = request.POST.get('admin_id')
-            if new_id:
-                try:
-                    # settings.py dagi ro'yxatni o'zgartira olmaymiz (fayl), 
-                    # lekin bazada Admin model qilib saqlasak bo'lardi.
-                    # Hozircha soddalik uchun faqat Client sifatida qo'shamiz va 
-                    # kelajakda "Admin" modelini joriy qilamiz.
-                    
-                    # MVP varianti: Shunchaki xabar chiqaramiz (Hozircha qo'lda qilasiz deb)
-                    messages.info(request, "Admin qo'shish uchun IT mutaxassisga bog'laning (Xavfsizlik uchun).")
-                except Exception:
-                    pass
+            # YANGI ADMIN (XODIM) QO'SHISH
+            name = request.POST.get('name')
+            tg_id = request.POST.get('telegram_id')
+            if name and tg_id:
+                # 1. User yaratamiz (Login uchun)
+                if not User.objects.filter(username=str(tg_id)).exists():
+                    user = User.objects.create_user(username=str(tg_id), password='worker_password')
+                    # 2. Uni shu do'konga bog'laymiz
+                    UserProfile.objects.create(user=user, shop=shop, role='worker')
+                    # 3. Ro'yxatga (Whitelist) qo'shamiz
+                    AllowedAdmin.objects.create(shop=shop, name=name, telegram_id=tg_id)
+                    messages.success(request, f"Xodim {name} qo'shildi!")
+                else:
+                    messages.error(request, "Bu Telegram ID band!")
+
+    # Shu do'kon adminlari
+    allowed_admins = AllowedAdmin.objects.filter(shop=shop)
 
     return render(request, 'settings.html', {
         'settings': settings_obj,
+        'allowed_admins': allowed_admins,
         'back_url': 'main_menu',
-
     })
+
 
 
 @login_required(login_url='/login/')
 def client_list_view(request):
-    # Qidiruv (Search)
+    shop = get_current_shop(request)
     search_query = request.GET.get('q', '')
+
+    clients = Client.objects.filter(shop=shop)  # <--- Faqat o'z mijozlari
+
     if search_query:
-        clients = Client.objects.filter(
+        clients = clients.filter(
             Q(full_name__icontains=search_query) |
             Q(phone__icontains=search_query)
         ).order_by('full_name')
     else:
-        clients = Client.objects.all().order_by('full_name')
+        clients = clients.order_by('full_name')
 
     return render(request, 'client_list.html', {
         'clients': clients,
         'search_query': search_query,
-        'back_url': 'settings'  # Sozlamalardan kiriladi
+        'back_url': 'settings'
     })
-
 
 @login_required(login_url='/login/')
 def client_form_view(request, client_id=None):
+    shop = get_current_shop(request)
     client = None
     if client_id:
-        client = get_object_or_404(Client, id=client_id)
+        client = get_object_or_404(Client, id=client_id, shop=shop)
 
     if request.method == 'POST':
         full_name = request.POST.get('full_name')
-        # Raqamdagi ortiqcha bo'sh joylarni olib tashlaymiz
         phone = request.POST.get('phone', '').replace(' ', '')
 
         if full_name and phone:
-
-            if not client and Client.objects.filter(phone=phone).exists():
-                existing_client = Client.objects.get(phone=phone)
-                messages.error(request,
-                               f"Xatolik! Bu raqam ({phone}) allaqachon '{existing_client.full_name}' nomiga ochilgan.")
-                return render(request, 'client_form.html', {
-                    'client': {'full_name': full_name, 'phone': phone},  # Kiritganini qaytarib beramiz
-                    'back_url': 'client_list'
-                })
-
-            if client and Client.objects.filter(phone=phone).exclude(id=client.id).exists():
-                messages.error(request, f"Xatolik! Bu raqam boshqa mijozga tegishli.")
-                return render(request, 'client_form.html', {
-                    'client': client,
-                    'back_url': 'client_list'
-                })
+            # Unikallikni faqat SHU DO'KON ichida tekshiramiz
+            if not client and Client.objects.filter(shop=shop, phone=phone).exists():
+                messages.error(request, f"Xatolik! Bu raqam do'koningizda mavjud.")
+                return render(request, 'client_form.html',
+                              {'client': {'full_name': full_name, 'phone': phone}, 'back_url': 'client_list'})
 
             if client:
                 client.full_name = full_name
                 client.phone = phone
                 client.save()
-                messages.success(request, "Mijoz ma'lumotlari yangilandi!")
+                messages.success(request, "Mijoz yangilandi!")
             else:
-                Client.objects.create(full_name=full_name, phone=phone)
+                Client.objects.create(shop=shop, full_name=full_name, phone=phone)
                 messages.success(request, "Yangi mijoz qo'shildi!")
 
             return redirect('client_list')

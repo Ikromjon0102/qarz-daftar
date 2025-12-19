@@ -1,0 +1,388 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>QarzDaptar - Automate Store Credit</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Spline+Sans:wght@300;400;500;600;700&amp;family=Noto+Sans:wght@300;400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script>
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            colors: {
+              "primary": "#30e87a",
+              "background-light": "#f6f8f7",
+              "background-dark": "#112117",
+            },
+            fontFamily: {
+              "display": ["Spline Sans", "sans-serif"],
+              "body": ["Noto Sans", "sans-serif"],
+            },
+            borderRadius: {"DEFAULT": "1rem", "lg": "2rem", "xl": "3rem", "full": "9999px"},
+          },
+        },
+      }
+    </script>
+</head>
+<body class="font-display bg-background-light dark:bg-background-dark text-slate-900 dark:text-white antialiased overflow-x-hidden">
+<div class="relative flex h-auto min-h-screen w-full flex-col group/design-root">
+<div class="layout-container flex h-full grow flex-col">
+<!-- Navbar -->
+<div class="w-full flex justify-center sticky top-0 z-50 bg-background-light/90 dark:bg-background-dark/90 backdrop-blur-md border-b border-[#244732]">
+<div class="layout-content-container flex flex-col max-w-[1200px] flex-1 px-4 lg:px-8">
+<header class="flex items-center justify-between whitespace-nowrap py-3">
+<div class="flex items-center gap-2 text-slate-900 dark:text-white">
+<div class="size-8 text-primary flex items-center justify-center">
+<span class="material-symbols-outlined text-[32px]">account_balance_wallet</span>
+</div>
+<h2 class="text-lg font-bold leading-tight tracking-[-0.015em]">QarzDaptar</h2>
+</div>
+<div class="hidden md:flex flex-1 justify-center gap-8">
+<a class="text-sm font-medium hover:text-primary transition-colors" href="#features">Features</a>
+<a class="text-sm font-medium hover:text-primary transition-colors" href="#how-it-works">How it Works</a>
+<a class="text-sm font-medium hover:text-primary transition-colors" href="#reviews">Reviews</a>
+</div>
+<div class="flex justify-end gap-4">
+<button class="flex cursor-pointer items-center justify-center overflow-hidden rounded-full h-10 px-6 bg-primary hover:bg-green-400 transition-colors text-[#112218] text-sm font-bold leading-normal tracking-[0.015em]">
+<span class="truncate">Start Now</span>
+</button>
+</div>
+</header>
+</div>
+</div>
+<!-- Hero Section -->
+<div class="w-full flex justify-center py-12 md:py-20 lg:py-24">
+<div class="layout-content-container flex flex-col max-w-[1200px] flex-1 px-4 lg:px-8">
+<div class="@container">
+<div class="flex flex-col gap-10 lg:gap-16 lg:flex-row items-center">
+<div class="flex flex-col gap-6 lg:w-1/2 justify-center">
+<div class="flex flex-col gap-4 text-left">
+<div class="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-[#244732] bg-[#1a3224] w-fit">
+<span class="size-2 rounded-full bg-primary animate-pulse"></span>
+<span class="text-xs font-medium text-white/80 uppercase tracking-wider">Live on Telegram</span>
+</div>
+<h1 class="text-4xl font-black leading-tight tracking-[-0.033em] md:text-5xl lg:text-6xl text-slate-900 dark:text-white">
+                                        Ditch the Notebook.<br/>
+<span class="text-primary">Automate your Credit.</span>
+</h1>
+<h2 class="text-slate-600 dark:text-slate-300 text-lg font-normal leading-relaxed max-w-[540px]">
+                                        The easiest way to track customer debts directly inside Telegram. Secure, fast, and always accessible for you and your customers.
+                                    </h2>
+</div>
+<div class="flex flex-wrap gap-4 pt-2">
+<button class="flex cursor-pointer items-center justify-center overflow-hidden rounded-full h-12 px-8 bg-primary hover:bg-green-400 transition-colors text-[#112218] text-base font-bold leading-normal tracking-[0.015em] shadow-[0_0_20px_rgba(48,232,122,0.3)] hover:shadow-[0_0_30px_rgba(48,232,122,0.5)]">
+<span class="material-symbols-outlined mr-2 text-[20px]">rocket_launch</span>
+<span class="truncate">Launch in Telegram</span>
+</button>
+<button class="flex cursor-pointer items-center justify-center overflow-hidden rounded-full h-12 px-8 bg-[#1a3224] hover:bg-[#244732] border border-[#244732] text-white text-base font-bold leading-normal tracking-[0.015em] transition-colors">
+<span class="material-symbols-outlined mr-2 text-[20px]">play_circle</span>
+<span class="truncate">Watch Demo</span>
+</button>
+</div>
+<div class="flex items-center gap-4 pt-4 text-sm text-slate-500 dark:text-slate-400">
+<div class="flex -space-x-2">
+<!-- Avatars mimicking users -->
+<div class="size-8 rounded-full bg-slate-700 border-2 border-background-dark bg-cover" data-alt="User avatar" style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuAisrL3pKkC9I9rdIOB7R227KNnonCxSqawbgjJUZHsdkybUfuBp6dEi4p7tV8NyGQcmyXgaexbHuX6ECL2AD3Os-wHC2DT7DS0S0YE-yJTjR2HDKr14FLXtKdhapkRVvnHOXxO-Hxg1o9r1zt0F3IgTefPBctb7ZgdB8xZqgCYysTeatUSJdcm2Hf0hXUJxNLuOggPaN5ZLBHFazuNb_6dDsHXaBxkHYFLeicqHfvp2e8ySUAvEhU4PqfqV0G2jWFowPgvQRr83L8')"></div>
+<div class="size-8 rounded-full bg-slate-700 border-2 border-background-dark bg-cover" data-alt="User avatar" style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuD3SxSw6LY-ujay5DG56_WcDtPPXQF5oi7rLS1VAvBqeHnJdP8KBmYM7PzeQtIjDKlqX81mqGvdFFpOYMKGF3N1pudwDC5MVbSVcvCrZedIMfO0MDmnLHwzulWnxwCg0Wxe45uLRSqkxBxGdqxL1C4f10_NzzFsrU8Mi4EigsGD69cVl-WKbmQ2_ue3AHxwmPSED8mgb-kIUvPJaVyn8Oi9iuUQitQDUB6ziM60XF0FgNmq0JxzTZX0mRtZvL7ixmu7zUk2L5HYVsg')"></div>
+<div class="size-8 rounded-full bg-slate-700 border-2 border-background-dark bg-cover" data-alt="User avatar" style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuBVL6Ely8FKjSkJw3VPgsNA24fNdYM9kkar1KDr6refT1MPsRsM4gOxGXf8U9uLQlDCBCCbbT36WaHmFHarG3zQGvqlHHRtgejWD8OPExouIE4UL-xHQpqwax65KweNmrT58LaLiJBHr_2FqFrO7GwVnLkjALYnz_wFYCvPkjH7XSQrym6cFlyziVeLZWBL7WZKiwry50ocP0w0gjr7Sb52ssUQOZZdNbcwjHBvx12HjUWyMUDRbS4fon07ewt3XJIxK1rMhMi8NIQ')"></div>
+</div>
+<p>Trusted by 500+ store owners</p>
+</div>
+</div>
+<div class="w-full lg:w-1/2 relative flex justify-center items-center">
+<!-- Abstract glow behind the image -->
+<div class="absolute inset-0 bg-primary/20 blur-[100px] rounded-full transform scale-75"></div>
+<div class="relative z-10 w-full max-w-[400px] aspect-[9/16] bg-slate-900 rounded-[3rem] border-8 border-slate-800 shadow-2xl overflow-hidden flex flex-col">
+<!-- Fake Mobile Header -->
+<div class="bg-[#262626] p-4 flex items-center gap-3 border-b border-[#333]">
+<span class="material-symbols-outlined text-white">arrow_back</span>
+<div class="flex items-center gap-3">
+<div class="size-10 rounded-full bg-primary flex items-center justify-center text-[#112218] font-bold">QD</div>
+<div>
+<div class="text-white font-semibold">QarzDaptar Bot</div>
+<div class="text-primary text-xs">bot</div>
+</div>
+</div>
+</div>
+<!-- Fake Chat Body -->
+<div class="flex-1 bg-[#1a1a1a] p-4 flex flex-col gap-4 overflow-hidden relative" style="background-image: radial-gradient(#333 1px, transparent 1px); background-size: 20px 20px;">
+<div class="self-start bg-[#262626] text-white p-3 rounded-2xl rounded-tl-none max-w-[85%] text-sm shadow-md">
+                                            Hello! 👋 I'm your digital ledger assistant. How can I help you today?
+                                            <div class="text-[10px] text-gray-400 text-right mt-1">10:00 AM</div>
+</div>
+<div class="self-end bg-primary text-[#112218] p-3 rounded-2xl rounded-tr-none max-w-[85%] text-sm shadow-md font-medium">
+                                            Add debt for John Doe, $45.50 for groceries.
+                                            <div class="text-[10px] text-[#112218]/70 text-right mt-1">10:02 AM</div>
+</div>
+<div class="self-start bg-[#262626] text-white p-3 rounded-2xl rounded-tl-none max-w-[85%] text-sm shadow-md">
+                                            ✅ <b>Debt Recorded!</b><br/><br/>
+                                            Customer: <b>John Doe</b><br/>
+                                            Amount: <b>$45.50</b><br/>
+                                            Item: Groceries<br/>
+                                            Total Balance: <b>$120.00</b>
+<div class="mt-3 flex gap-2">
+<button class="bg-[#333] hover:bg-[#444] py-1 px-3 rounded text-xs">View History</button>
+<button class="bg-[#333] hover:bg-[#444] py-1 px-3 rounded text-xs">Notify Customer</button>
+</div>
+<div class="text-[10px] text-gray-400 text-right mt-1">10:02 AM</div>
+</div>
+<!-- Notification Toast Simulation -->
+<div class="absolute bottom-4 left-4 right-4 bg-slate-800/90 backdrop-blur border border-slate-700 p-3 rounded-xl flex gap-3 items-center shadow-lg animate-bounce">
+<div class="bg-primary/20 p-2 rounded-full text-primary">
+<span class="material-symbols-outlined text-[20px]">notifications_active</span>
+</div>
+<div class="text-xs text-white">
+<span class="font-bold block">New Alert</span>
+                                                Customer John Doe paid $50.00
+                                            </div>
+</div>
+</div>
+<!-- Fake Input Area -->
+<div class="bg-[#262626] p-3 flex gap-2 items-center">
+<span class="material-symbols-outlined text-gray-400">attach_file</span>
+<div class="flex-1 bg-[#1a1a1a] h-9 rounded-full px-3 text-sm text-gray-400 flex items-center">Write a message...</div>
+<span class="material-symbols-outlined text-primary">send</span>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- Features Section -->
+<div class="w-full flex justify-center py-20 bg-[#15281e] border-y border-[#244732]" id="features">
+<div class="layout-content-container flex flex-col max-w-[1200px] flex-1 px-4 lg:px-8">
+<div class="flex flex-col gap-10 md:gap-16">
+<div class="flex flex-col gap-4 text-center items-center">
+<h2 class="text-primary font-bold tracking-wider uppercase text-sm">Why Switch?</h2>
+<h3 class="text-slate-900 dark:text-white text-3xl md:text-4xl font-black leading-tight max-w-[720px]">
+                                Replace your physical ledger with a smart, automated assistant.
+                            </h3>
+<p class="text-slate-600 dark:text-slate-300 text-base md:text-lg font-normal leading-normal max-w-[600px]">
+                                Manual notebooks get lost, damaged, or miscalculated. QarzDaptar keeps your business organized and your customers happy.
+                            </p>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+<!-- Feature 1 -->
+<div class="group flex flex-col gap-6 rounded-2xl border border-[#244732] bg-[#1a3224] p-8 hover:bg-[#203c2b] transition-all duration-300 hover:-translate-y-1 hover:shadow-lg hover:shadow-primary/10">
+<div class="size-14 rounded-full bg-[#244732] group-hover:bg-primary/20 flex items-center justify-center transition-colors">
+<span class="material-symbols-outlined text-primary text-[32px]">notifications_active</span>
+</div>
+<div class="flex flex-col gap-3">
+<h4 class="text-white text-xl font-bold leading-tight">Instant Notifications</h4>
+<p class="text-[#93c8a8] text-base font-normal leading-relaxed">
+                                        Build trust with transparency. Customers receive an automatic message on Telegram whenever a debt is added or a payment is made.
+                                    </p>
+</div>
+</div>
+<!-- Feature 2 -->
+<div class="group flex flex-col gap-6 rounded-2xl border border-[#244732] bg-[#1a3224] p-8 hover:bg-[#203c2b] transition-all duration-300 hover:-translate-y-1 hover:shadow-lg hover:shadow-primary/10">
+<div class="size-14 rounded-full bg-[#244732] group-hover:bg-primary/20 flex items-center justify-center transition-colors">
+<span class="material-symbols-outlined text-primary text-[32px]">calculate</span>
+</div>
+<div class="flex flex-col gap-3">
+<h4 class="text-white text-xl font-bold leading-tight">Automatic Totals</h4>
+<p class="text-[#93c8a8] text-base font-normal leading-relaxed">
+                                        Stop doing math in the margins. See individual customer balances and your total store credit instantly with zero errors.
+                                    </p>
+</div>
+</div>
+<!-- Feature 3 -->
+<div class="group flex flex-col gap-6 rounded-2xl border border-[#244732] bg-[#1a3224] p-8 hover:bg-[#203c2b] transition-all duration-300 hover:-translate-y-1 hover:shadow-lg hover:shadow-primary/10">
+<div class="size-14 rounded-full bg-[#244732] group-hover:bg-primary/20 flex items-center justify-center transition-colors">
+<span class="material-symbols-outlined text-primary text-[32px]">cloud_sync</span>
+</div>
+<div class="flex flex-col gap-3">
+<h4 class="text-white text-xl font-bold leading-tight">Cloud Sync</h4>
+<p class="text-[#93c8a8] text-base font-normal leading-relaxed">
+                                        Your ledger is tied to your account, not your device. Lose your phone? Just log in on a new one and all your data is safe.
+                                    </p>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- How It Works Timeline -->
+<div class="w-full flex justify-center py-20" id="how-it-works">
+<div class="layout-content-container flex flex-col max-w-[960px] flex-1 px-4 lg:px-8">
+<div class="flex flex-col gap-10">
+<div class="text-center mb-4">
+<h2 class="text-slate-900 dark:text-white text-3xl font-black leading-tight">Get Started in 30 Seconds</h2>
+</div>
+<div class="grid grid-cols-[60px_1fr] md:grid-cols-[80px_1fr] gap-x-4 px-4">
+<!-- Step 1 -->
+<div class="flex flex-col items-center gap-2 pt-2">
+<div class="flex h-12 w-12 items-center justify-center rounded-full bg-primary text-[#112218] shadow-[0_0_15px_rgba(48,232,122,0.4)]">
+<span class="material-symbols-outlined text-[24px]">smart_toy</span>
+</div>
+<div class="w-[2px] bg-gradient-to-b from-primary to-[#244732] h-full grow min-h-[80px]"></div>
+</div>
+<div class="flex flex-col pb-12 pt-2">
+<h3 class="text-slate-900 dark:text-white text-xl font-bold leading-tight mb-2">Add the Bot</h3>
+<p class="text-slate-600 dark:text-[#93c8a8] text-base font-normal leading-relaxed max-w-[600px]">
+                                    Search for @QarzDaptarBot on Telegram and click "Start". No app downloads, no complicated registration forms.
+                                </p>
+</div>
+<!-- Step 2 -->
+<div class="flex flex-col items-center gap-2">
+<div class="w-[2px] bg-[#244732] h-4"></div>
+<div class="flex h-12 w-12 items-center justify-center rounded-full bg-[#1a3224] border border-primary text-primary">
+<span class="material-symbols-outlined text-[24px]">person_add</span>
+</div>
+<div class="w-[2px] bg-gradient-to-b from-[#244732] to-primary h-full grow min-h-[80px]"></div>
+</div>
+<div class="flex flex-col pb-12 pt-2">
+<h3 class="text-slate-900 dark:text-white text-xl font-bold leading-tight mb-2">Add a Customer</h3>
+<p class="text-slate-600 dark:text-[#93c8a8] text-base font-normal leading-relaxed max-w-[600px]">
+                                    Forward a contact or type a name to create a new ledger for a customer. The bot sets up their profile instantly.
+                                </p>
+</div>
+<!-- Step 3 -->
+<div class="flex flex-col items-center gap-2">
+<div class="w-[2px] bg-primary h-4"></div>
+<div class="flex h-12 w-12 items-center justify-center rounded-full bg-white text-[#112218]">
+<span class="material-symbols-outlined text-[24px]">receipt_long</span>
+</div>
+</div>
+<div class="flex flex-col pt-2">
+<h3 class="text-slate-900 dark:text-white text-xl font-bold leading-tight mb-2">Record Debt &amp; Relax</h3>
+<p class="text-slate-600 dark:text-[#93c8a8] text-base font-normal leading-relaxed max-w-[600px]">
+                                    Simply type "500 rice" and the bot logs it. Both you and the customer get an updated balance summary immediately.
+                                </p>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- Testimonials / Carousel -->
+<div class="w-full flex justify-center py-20 bg-[#15281e]" id="reviews">
+<div class="layout-content-container flex flex-col max-w-[1200px] flex-1 px-4 lg:px-8 overflow-hidden">
+<div class="flex flex-col gap-8">
+<div class="flex flex-col gap-2 px-4">
+<h2 class="text-slate-900 dark:text-white text-3xl font-black leading-tight">Trusted by Shopkeepers</h2>
+<p class="text-[#93c8a8]">Join hundreds of businesses modernizing their operations.</p>
+</div>
+<div class="flex overflow-x-auto pb-8 gap-6 px-4 snap-x snap-mandatory [-ms-scrollbar-style:none] [scrollbar-width:none] [&amp;::-webkit-scrollbar]:hidden">
+<!-- Card 1 -->
+<div class="snap-center shrink-0 w-[300px] md:w-[360px] flex flex-col gap-4 rounded-2xl bg-[#1a3224] p-6 border border-[#244732]">
+<div class="flex items-center gap-4">
+<div class="size-12 rounded-full bg-slate-500 bg-cover bg-center" data-alt="Portrait of a smiling shop owner" style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuDMkt7xOvDeqVmEYAsXXOMt3R700Kk8PmzXtzCeBT_ZRLgoVLSIrXiekjgaGsvJqF2H6uKJL7sw3UQo2xVhNGxRMcWMu_tZbrOeUxsQdaG_MaJf2k7rSmUYyF1JXggyp24Ez9gi3kWqC0i2mMr9DZtpyjyiaotqlqEr27JBjehk0hvCKfHY5zZFtiB58fT7Wzi-qK5k4boNgUw3-AMw-8nRHxBQpA-upKS3yq-oIPAq87cOFsMfrn4-CzlgJIdjtgWuDokR5lyt4ng');"></div>
+<div>
+<p class="text-white font-bold">Ahmed K.</p>
+<p class="text-xs text-[#93c8a8]">Grocery Store Owner</p>
+</div>
+</div>
+<div class="flex gap-1 text-primary">
+<span class="material-symbols-outlined text-[18px]">star</span>
+<span class="material-symbols-outlined text-[18px]">star</span>
+<span class="material-symbols-outlined text-[18px]">star</span>
+<span class="material-symbols-outlined text-[18px]">star</span>
+<span class="material-symbols-outlined text-[18px]">star</span>
+</div>
+<p class="text-slate-300 text-sm leading-relaxed italic">
+                                    "It changed how I manage my shop completely. I used to spend hours on Fridays calculating totals. Now I just check the bot."
+                                </p>
+</div>
+<!-- Card 2 -->
+<div class="snap-center shrink-0 w-[300px] md:w-[360px] flex flex-col gap-4 rounded-2xl bg-[#1a3224] p-6 border border-[#244732]">
+<div class="flex items-center gap-4">
+<div class="size-12 rounded-full bg-slate-500 bg-cover bg-center" data-alt="Portrait of a smiling shop owner" style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuAVjov9XLnsymbB0PXVYwNGDKsZ2nwbrTpXjmE26zkhRK1c8fg-zTO3VyUM97YfP5Ee125k6SP0wnd8bm6o2X0VJNisqDXINt0jwK7ZXcV4ulhN33ay1Jny0nSPg3SsHM_gD3GyoyQ8iN3WhGx80oQQp75r4r8QjlKyBdFp93XrgZg1PPQc0YTacwylpCefnsGK8op0jrzLlpxxpCZGYtOOcdevPmmjgYJCbwWjPneRXrTqBfaO349na7hBkGzMWipdJmZLJW7Dr28');"></div>
+<div>
+<p class="text-white font-bold">Sarah M.</p>
+<p class="text-xs text-[#93c8a8]">Boutique Owner</p>
+</div>
+</div>
+<div class="flex gap-1 text-primary">
+<span class="material-symbols-outlined text-[18px]">star</span>
+<span class="material-symbols-outlined text-[18px]">star</span>
+<span class="material-symbols-outlined text-[18px]">star</span>
+<span class="material-symbols-outlined text-[18px]">star</span>
+<span class="material-symbols-outlined text-[18px]">star_half</span>
+</div>
+<p class="text-slate-300 text-sm leading-relaxed italic">
+                                    "My customers love the transparency. They get a message instantly, so there are never any arguments about the bill later."
+                                </p>
+</div>
+<!-- Card 3 -->
+<div class="snap-center shrink-0 w-[300px] md:w-[360px] flex flex-col gap-4 rounded-2xl bg-[#1a3224] p-6 border border-[#244732]">
+<div class="flex items-center gap-4">
+<div class="size-12 rounded-full bg-slate-500 bg-cover bg-center" data-alt="Portrait of a smiling shop owner" style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuAR3cO0Tt7fRc5yXAnoQwvnDXYftqT4_576xTvkOwxejheBFkBIrloQ5uGAnDDf4EyYG3q5d5W__ZAY9TGTCol9FtZZbCC0YNb99KwE8qqhYggGErIYpTj9ewmceESzimTyIbCUb2T9I01lHWjCmsh2XtHcSq4zjtaH5zv-HeQTIYPeLF4XTRrBDDpdqY_UwTTImdmdfwAdWUxwUu2aJFNHxcNB3pUFeBeWMeYf9IOvlbm4K0oPKGx-FPcBZ-qdPUulM-VxcbvJLd8');"></div>
+<div>
+<p class="text-white font-bold">David L.</p>
+<p class="text-xs text-[#93c8a8]">Hardware Store</p>
+</div>
+</div>
+<div class="flex gap-1 text-primary">
+<span class="material-symbols-outlined text-[18px]">star</span>
+<span class="material-symbols-outlined text-[18px]">star</span>
+<span class="material-symbols-outlined text-[18px]">star</span>
+<span class="material-symbols-outlined text-[18px]">star</span>
+<span class="material-symbols-outlined text-[18px]">star</span>
+</div>
+<p class="text-slate-300 text-sm leading-relaxed italic">
+                                    "Simple, fast, and reliable. I don't need to teach my staff how to use complex software. Everyone knows how to use Telegram."
+                                </p>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- CTA Section -->
+<div class="w-full flex justify-center py-20">
+<div class="layout-content-container flex flex-col max-w-[1200px] flex-1 px-4 lg:px-8">
+<div class="rounded-[2.5rem] bg-gradient-to-br from-primary to-[#244732] p-8 md:p-16 flex flex-col md:flex-row items-center gap-10 overflow-hidden relative">
+<!-- Background Pattern -->
+<div class="absolute inset-0 opacity-10" style="background-image: radial-gradient(#000 2px, transparent 2px); background-size: 30px 30px;"></div>
+<div class="flex-1 flex flex-col gap-6 relative z-10 text-center md:text-left">
+<h2 class="text-[#112218] text-3xl md:text-5xl font-black leading-tight tracking-tight">
+                                Ready to organize your business?
+                            </h2>
+<p class="text-[#112218]/80 text-lg font-medium max-w-[500px]">
+                                Start tracking debts in seconds. No credit card required. Free for up to 50 customers.
+                            </p>
+<div class="flex flex-col sm:flex-row gap-4 justify-center md:justify-start">
+<button class="flex cursor-pointer items-center justify-center rounded-full h-12 px-8 bg-[#112218] hover:bg-black text-white text-base font-bold transition-all shadow-xl">
+                                    Launch Bot
+                                </button>
+<button class="flex cursor-pointer items-center justify-center rounded-full h-12 px-8 bg-white/20 hover:bg-white/30 text-[#112218] border border-[#112218]/20 text-base font-bold transition-all backdrop-blur-sm">
+                                    View Pricing
+                                </button>
+</div>
+</div>
+<div class="w-full md:w-1/3 relative z-10 flex justify-center">
+<div class="size-48 md:size-64 bg-white/10 backdrop-blur-md rounded-full flex items-center justify-center border border-white/20 shadow-2xl">
+<span class="material-symbols-outlined text-[#112218] text-[80px] md:text-[100px]">qr_code_2</span>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- Footer -->
+<footer class="w-full flex justify-center py-10 bg-[#0d1a12] border-t border-[#244732]">
+<div class="layout-content-container flex flex-col max-w-[1200px] flex-1 px-4 lg:px-8">
+<div class="flex flex-col md:flex-row justify-between items-center gap-6">
+<div class="flex items-center gap-2 text-white">
+<div class="size-6 text-primary flex items-center justify-center">
+<span class="material-symbols-outlined text-[24px]">account_balance_wallet</span>
+</div>
+<h2 class="text-lg font-bold">QarzDaptar</h2>
+</div>
+<div class="flex gap-6 text-[#93c8a8] text-sm font-medium">
+<a class="hover:text-white transition-colors" href="#">Privacy Policy</a>
+<a class="hover:text-white transition-colors" href="#">Terms of Service</a>
+<a class="hover:text-white transition-colors" href="#">Contact Support</a>
+</div>
+<div class="text-[#5b7c69] text-sm">
+                            © 2023 QarzDaptar. All rights reserved.
+                        </div>
+</div>
+</div>
+</footer>
+</div>
+</div>
+</body></html>

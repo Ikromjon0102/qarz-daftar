@@ -33,8 +33,9 @@
                         <h6 class="fw-bold mb-0 text-dark">{{ admin.name }}</h6>
                         <small class="text-muted">ID: {{ admin.telegram_id }}</small>
                     </div>
-                </div>
 
+                </div>
+                <span class="badge bg-light text-dark border">Active</span>
                 <a href="{% url 'manage_admins_id' 'delete' admin.id %}"
                    class="btn btn-sm btn-outline-danger border-0 bg-white shadow-sm"
                    onclick="return confirm('Rostdan ham o\'chirmoqchimisiz?')">

@@ -1,6 +1,6 @@
 # core/admin.py
 from django.contrib import admin
-from .models import Client, Debt, AllowedAdmin
+from .models import Client, Debt, AllowedAdmin, Shop
 
 @admin.register(Client)
 class ClientAdmin(admin.ModelAdmin):
@@ -24,3 +24,7 @@ class DebtAdmin(admin.ModelAdmin):
 
 
 admin.site.register(AllowedAdmin)
+admin.site.register(Shop)
+
+
+

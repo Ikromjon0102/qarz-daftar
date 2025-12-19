@@ -1,0 +1,24 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container d-flex flex-column align-items-center justify-content-center min-vh-100 text-center">
+    
+    <div class="mb-4">
+        <i class="fa-solid fa-circle-check text-success" style="font-size: 5rem;"></i>
+    </div>
+
+    <h1 class="fw-bold mb-3">Tabriklaymiz!</h1>
+    <h4 class="text-muted mb-4">"{{ shop_name }}" do'koni muvaffaqiyatli yaratildi.</h4>
+
+    <div class="card border-0 shadow-sm p-4 rounded-4 bg-light mb-4" style="max-width: 500px;">
+        <p class="mb-3">Tizimdan foydalanishni boshlash uchun Telegram botga o'ting va <b>/start</b> tugmasini bosing.</p>
+        
+        <a href="https://t.me/{{ bot_username }}?start=login" class="btn btn-primary btn-lg rounded-pill px-5 fw-bold shadow-sm">
+            <i class="fa-brands fa-telegram me-2"></i> Botga o'tish
+        </a>
+    </div>
+
+    <p class="small text-muted">Yoki login sahifasiga qayting: <a href="{% url 'login_page' %}">Kirish</a></p>
+
+</div>
+{% endblock %}

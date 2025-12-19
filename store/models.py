@@ -1,9 +1,10 @@
 # store/models.py
 from django.db import models
-from core.models import Client  # Mijoz kerak bo'ladi
+from core.models import Client, Shop  # Shop ni import qilamiz
 
 
 class Category(models.Model):
+    shop = models.ForeignKey(Shop, on_delete=models.CASCADE, related_name='categories', null=True, blank=True)  # <--
     name = models.CharField(max_length=100, verbose_name="Kategoriya")
 
     def __str__(self): return self.name
@@ -12,7 +13,9 @@ class Category(models.Model):
 
 
 class Product(models.Model):
+    shop = models.ForeignKey(Shop, on_delete=models.CASCADE, related_name='products', null=True, blank=True)  # <--
     category = models.ForeignKey(Category, on_delete=models.CASCADE, null=True, verbose_name="Kategoriya")
+
     name = models.CharField(max_length=200, verbose_name="Nomi")
     description = models.TextField(blank=True, verbose_name="Tarif")
     price = models.DecimalField(max_digits=10, decimal_places=0, verbose_name="Narxi")
@@ -27,6 +30,8 @@ class Product(models.Model):
 
 
 class Order(models.Model):
+    shop = models.ForeignKey(Shop, on_delete=models.CASCADE, related_name='orders', null=True, blank=True)  # <--
+
     STATUS_CHOICES = (
         ('new', 'Yangi'),
         ('accepted', 'Qabul qilindi'),
@@ -41,11 +46,12 @@ class Order(models.Model):
 
 
 class OrderItem(models.Model):
+    # OrderItem ga shop shart emas, chunki u Order ga bog'langan, Order esa Shop ga bog'langan.
     order = models.ForeignKey(Order, on_delete=models.CASCADE)
     product = models.ForeignKey('Product', on_delete=models.SET_NULL, null=True)
     qty = models.IntegerField(default=1)
-    price = models.DecimalField(max_digits=10, decimal_places=0) # O'sha vaqtdagi narx
-    
+    price = models.DecimalField(max_digits=10, decimal_places=0)
+
     @property
     def total(self):
         return self.qty * self.price
