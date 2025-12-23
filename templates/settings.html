@@ -9,36 +9,35 @@
 
 <div class="app-card mb-4 bg-white shadow-sm border-0">
     <h6 class="fw-bold mb-3 text-primary"><i class="fa-solid fa-money-bill-trend-up"></i> Valyuta Kursi</h6>
-    <p class="text-muted small">Bu kurs Nasiya yozish oynasida avtomatik chiqadi.</p>
+    <p class="text-muted small text-dark">Bu kurs Nasiya yozish oynasida avtomatik chiqadi.</p>
 
     <form method="POST">
         {% csrf_token %}
         <input type="hidden" name="action" value="update_rate">
 
-        <div class="input-group mb-3">
-            <span class="input-group-text bg-light fw-bold">1 USD =</span>
+        <div class="input-group mb-3 text-dark">
+            <span class="input-group-text  ">1 USD =</span>
             <input type="number" name="usd_rate" class="form-control fw-bold"
                 value="{{ settings.usd_rate|floatformat:0 }}">
-            <span class="input-group-text bg-light">so'm</span>
+            <span class="input-group-text bg-light ">so'm</span>
         </div>
 
         <button type="submit" class="btn btn-primary w-100 rounded-3">
-            <i class="fa-solid fa-floppy-disk"></i> Saqlash
+            <i class="fa-solid fa-floppy-disk text-dark"></i> Saqlash
         </button>
     </form>
 </div>
 
 <div class="app-card mb-4 bg-white shadow-sm border-0">
 <!--    <h6 class="fw-bold mb-3 text-dark"><i class="fa-solid fa-users-gear"></i> Mijozlar Bazasi</h6>-->
-<a href="{% url 'client_list' %}" class="btn btn-light w-100 py-3 mb-3 rounded-4 shadow-sm d-flex justify-content-between align-items-center">
-        <span class="fw-bold text-dark"><i class="fa-solid fa-users me-2 text-primary"></i> Mijozlar Bazasi</span>
+<a href="{% url 'client_list' %}" class="btn btn-primary w-100 py-3 mb-3 rounded-4 shadow-sm d-flex justify-content-between align-items-center">
+        <span class="fw-bold text-dark"><i class="fa-solid fa-users me-2 text-primary text-dark"></i> Mijozlar Bazasi</span>
         <i class="fa-solid fa-chevron-right text-muted"></i>
     </a>
 </div>
-
-<div class="text-center mt-5 text-muted opacity-50">
+<div class="text-center mt-5 text-muted opacity-50 text-dark">
     <small>Versiya 1.0.0 (Beta)</small><br>
-    <small>Made by <b>Kodyoz.uz</b></small>
+    <small>Made by <b>ikromjon.uz</b></small>
 </div>
 
 {% endblock %}

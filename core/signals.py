@@ -9,5 +9,5 @@ def notify_on_create(sender, instance, created, **kwargs):
     if created and instance.status == 'pending':
         if instance.client.telegram_id:
             # PythonAnywhere domenini shu yerdan berasiz
-            domain = "qarzdaptar.uz" 
+            domain = "telapp.tunl.uz"
             send_confirmation_request(instance.client.telegram_id, instance, domain)

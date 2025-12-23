@@ -1,407 +1,823 @@
 {% load static %}
 <!DOCTYPE html>
 <html class="dark" lang="uz">
-<head>
-    <meta charset="utf-8"/>
-    <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+  <head>
+    <meta charset="utf-8" />
+    <meta content="width=device-width, initial-scale=1.0" name="viewport" />
     <title>QarzDaptar - Nasiya Savdoning Zamonaviy Tizimi</title>
     <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Spline+Sans:wght@300;400;500;600;700&family=Noto+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet"/>
-    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
-    <link rel="icon" type="image/png" href="https://cdn-icons-png.flaticon.com/512/60/60484.png">
+    <link
+      href="https://fonts.googleapis.com/css2?family=Spline+Sans:wght@300;400;500;600;700&family=Noto+Sans:wght@300;400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap"
+      rel="stylesheet"
+    />
+    <link
+      rel="icon"
+      type="image/png"
+      href="https://cdn-icons-png.flaticon.com/512/60/60484.png"
+    />
     <script>
       tailwind.config = {
         darkMode: "class",
         theme: {
           extend: {
             colors: {
-              "primary": "#30e87a",
+              primary: "#30e87a",
               "background-light": "#f6f8f7",
               "background-dark": "#0d1a12",
               "card-dark": "#1a3224",
-              "border-green": "#244732"
+              "border-green": "#244732",
             },
             fontFamily: {
-              "display": ["Spline Sans", "sans-serif"],
-              "body": ["Noto Sans", "sans-serif"],
+              display: ["Spline Sans", "sans-serif"],
+              body: ["Noto Sans", "sans-serif"],
             },
             animation: {
-                'pulse-slow': 'pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite',
-            }
+              "pulse-slow": "pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite",
+            },
           },
         },
-      }
+      };
     </script>
     <style>
-        html { scroll-behavior: smooth; }
-        .custom-input {
-            background-color: #15281e;
-            border: 1px solid #244732;
-            color: white;
-            transition: all 0.3s ease;
-        }
-        .custom-input:focus {
-            border-color: #30e87a;
-            box-shadow: 0 0 0 2px rgba(48, 232, 122, 0.2);
-            outline: none;
-        }
-        /* Scrollbar yashirish */
-        .hide-scrollbar::-webkit-scrollbar {
-            display: none;
-        }
-        .hide-scrollbar {
-            -ms-overflow-style: none;
-            scrollbar-width: none;
-        }
+      html {
+        scroll-behavior: smooth;
+      }
+
+      .carousel-container {
+        perspective: 1000px;
+        position: relative;
+        width: 100%;
+        max-width: 500px;
+        height: 600px; /* Telefon balandligiga moslang */
+        display: flex;
+        justify-content: center;
+        align-items: center;
+      }
+
+      .carousel-card {
+        position: absolute;
+        width: 280px; /* Telefon kengligi */
+        height: 560px; /* Telefon balandligi */
+        transition: all 0.8s ease-in-out; /* Silliq almashish vaqti */
+        border-radius: 2.5rem;
+        box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+        overflow: hidden;
+        border: 8px solid #1e293b; /* Telefon ramkasi rangi */
+        background: #0f172a;
+      }
+
+      /* O'rtadagi karta (Katta va yorqin) */
+      .card-center {
+        transform: translateX(0) scale(1.1);
+        z-index: 30;
+        opacity: 1;
+        box-shadow: 0 0 40px rgba(48, 232, 122, 0.3); /* Primary rangdagi soya */
+        border-color: #334155;
+      }
+
+      /* Chapdagi karta (Kichik va xira) */
+      .card-left {
+        transform: translateX(-60%) scale(0.85);
+        z-index: 10;
+        opacity: 0.6;
+        filter: blur(1px);
+      }
+
+      /* O'ngdagi karta (Kichik va xira) */
+      .card-right {
+        transform: translateX(60%) scale(0.85);
+        z-index: 10;
+        opacity: 0.6;
+        filter: blur(1px);
+      }
+
+      /* Telefon ichidagi rasm */
+      .carousel-img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+      }
+
+      .custom-input {
+        background-color: #15281e;
+        border: 1px solid #244732;
+        color: darkslategray;
+        transition: all 0.3s ease;
+      }
+      .custom-input:focus {
+        border-color: #30e87a;
+        box-shadow: 0 0 0 2px rgba(48, 232, 122, 0.2);
+        outline: none;
+      }
+      /* Scrollbar yashirish */
+      .hide-scrollbar::-webkit-scrollbar {
+        display: none;
+      }
+      .hide-scrollbar {
+        -ms-overflow-style: none;
+        scrollbar-width: none;
+      }
+
+      /* Karusel uchun animatsiya */
+      .carousel-slide {
+        transition: opacity 1s ease-in-out;
+      }
+      .opacity-0 {
+        opacity: 0;
+      }
+      .opacity-100 {
+        opacity: 1;
+      }
     </style>
-</head>
+  </head>
 
-<body class="font-display bg-background-light dark:bg-background-dark text-slate-900 dark:text-white antialiased overflow-x-hidden">
-<div class="relative flex h-auto min-h-screen w-full flex-col group/design-root">
+  <body
+    class="font-display bg-background-light dark:bg-background-dark text-slate-900 dark:text-white antialiased overflow-x-hidden"
+  >
+    <div
+      class="relative flex h-auto min-h-screen w-full flex-col group/design-root"
+    >
+      <div
+        class="w-full flex justify-center sticky top-0 z-50 bg-background-light/80 dark:bg-background-dark/80 backdrop-blur-md border-b border-border-green"
+      >
+        <div
+          class="layout-content-container flex flex-col max-w-[1200px] flex-1 px-4 lg:px-8"
+        >
+          <header
+            class="flex items-center justify-between whitespace-nowrap py-3"
+          >
+            <div class="flex items-center gap-2 text-slate-900 dark:text-white">
+              <div class="size-8 text-primary flex items-center justify-center">
+                <span class="material-symbols-outlined text-[32px]"
+                  >account_balance_wallet</span
+                >
+              </div>
+              <h2 class="text-lg font-bold leading-tight tracking-tight">
+                Qarz<span class="text-primary">Daptar</span>
+              </h2>
+            </div>
 
-    <div class="w-full flex justify-center sticky top-0 z-50 bg-background-light/80 dark:bg-background-dark/80 backdrop-blur-md border-b border-border-green">
-        <div class="layout-content-container flex flex-col max-w-[1200px] flex-1 px-4 lg:px-8">
-            <header class="flex items-center justify-between whitespace-nowrap py-3">
-                <div class="flex items-center gap-2 text-slate-900 dark:text-white">
-                    <div class="size-8 text-primary flex items-center justify-center">
-                        <span class="material-symbols-outlined text-[32px]">account_balance_wallet</span>
-                    </div>
-                    <h2 class="text-lg font-bold leading-tight tracking-tight">Qarz<span class="text-primary">Daptar</span></h2>
-                </div>
+            <div class="hidden md:flex flex-1 justify-center gap-8">
+              <a
+                class="text-sm font-medium hover:text-primary transition-colors"
+                href="#features"
+                >Imkoniyatlar</a
+              >
+              <a
+                class="text-sm font-medium hover:text-primary transition-colors"
+                href="#reviews"
+                >Fikrlar</a
+              >
+              <a
+                class="text-sm font-medium hover:text-primary transition-colors"
+                href="#how-it-works"
+                >Qanday ishlaydi?</a
+              >
+            </div>
 
-                <div class="hidden md:flex flex-1 justify-center gap-8">
-                    <a class="text-sm font-medium hover:text-primary transition-colors" href="#features">Imkoniyatlar</a>
-                    <a class="text-sm font-medium hover:text-primary transition-colors" href="#reviews">Fikrlar</a>
-                    <a class="text-sm font-medium hover:text-primary transition-colors" href="#how-it-works">Qanday ishlaydi?</a>
-                </div>
-
-                <div class="flex justify-end gap-4">
-                    <a href="#start-now" class="flex cursor-pointer items-center justify-center overflow-hidden rounded-full h-10 px-6 bg-primary hover:bg-green-400 transition-colors text-[#112218] text-sm font-bold leading-normal tracking-[0.015em] shadow-lg shadow-primary/20">
-                        <span class="truncate">Do'kon Ochish</span>
-                    </a>
-                </div>
-            </header>
+            <div class="flex justify-end gap-4">
+              <a
+                href="#start-now"
+                class="flex cursor-pointer items-center justify-center overflow-hidden rounded-full h-10 px-6 bg-primary hover:bg-green-400 transition-colors text-[#112218] text-sm font-bold leading-normal tracking-[0.015em] shadow-lg shadow-primary/20"
+              >
+                <span class="truncate">Do'kon Ochish</span>
+              </a>
+            </div>
+          </header>
         </div>
+      </div>
+
+      <div
+        class="w-full flex justify-center py-12 md:py-20 lg:py-24 relative overflow-hidden"
+      >
+        <div
+          class="absolute top-0 left-1/2 -translate-x-1/2 w-[600px] h-[600px] bg-primary/10 blur-[120px] rounded-full pointer-events-none"
+        ></div>
+
+        <div
+          class="layout-content-container flex flex-col max-w-[1200px] flex-1 px-4 lg:px-8 relative z-10"
+        >
+          <div class="flex flex-col gap-10 lg:gap-16 lg:flex-row items-center">
+            <div
+              class="flex flex-col gap-6 lg:w-1/2 justify-center text-center lg:text-left"
+            >
+              <div class="flex flex-col gap-4">
+                <div
+                  class="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-border-green bg-card-dark w-fit mx-auto lg:mx-0"
+                >
+                  <span
+                    class="size-2 rounded-full bg-primary animate-pulse-slow"
+                  ></span>
+                  <span
+                    class="text-xs font-medium text-white/80 uppercase tracking-wider"
+                    >Telegramda Ishlaydi</span
+                  >
+                </div>
+
+                <h1
+                  class="text-4xl font-black leading-tight tracking-tight md:text-5xl lg:text-6xl text-slate-900 dark:text-white"
+                >
+                  Qarz Daftardan<br />
+                  <span class="text-primary">Voz Keching.</span>
+                </h1>
+
+                <h2
+                  class="text-slate-600 dark:text-slate-300 text-lg font-normal leading-relaxed max-w-[540px] mx-auto lg:mx-0"
+                >
+                  Mijozlaringiz qarzini to'g'ridan-to'g'ri Telegram orqali
+                  boshqaring. Xavfsiz, tez va har doim yoningizda.
+                </h2>
+              </div>
+
+              <div
+                class="flex flex-wrap gap-4 pt-2 justify-center lg:justify-start"
+              >
+                <a
+                  href="#start-now"
+                  class="flex cursor-pointer items-center justify-center overflow-hidden rounded-full h-12 px-8 bg-primary hover:bg-green-400 transition-colors text-[#112218] text-base font-bold shadow-[0_0_20px_rgba(48,232,122,0.3)] hover:shadow-[0_0_30px_rgba(48,232,122,0.5)]"
+                >
+                  <span class="material-symbols-outlined mr-2 text-[20px]"
+                    >rocket_launch</span
+                  >
+                  <span class="truncate">Boshlash</span>
+                </a>
+                <a
+                  href="https://t.me/QarzDaptarBot"
+                  target="_blank"
+                  class="flex cursor-pointer items-center justify-center overflow-hidden rounded-full h-12 px-8 bg-card-dark hover:bg-border-green border border-border-green text-white text-base font-bold transition-colors"
+                >
+                  <span class="material-symbols-outlined mr-2 text-[20px]"
+                    >play_circle</span
+                  >
+                  <span class="truncate">Botni Ko'rish</span>
+                </a>
+              </div>
+
+              <div
+                class="flex items-center gap-4 pt-4 text-sm text-slate-500 dark:text-slate-400 justify-center lg:justify-start"
+              >
+                <div class="flex -space-x-2">
+                  <div
+                    class="size-8 rounded-full bg-slate-700 border-2 border-background-dark flex items-center justify-center text-[10px] text-white font-bold"
+                  >
+                    A
+                  </div>
+                  <div
+                    class="size-8 rounded-full bg-primary border-2 border-background-dark flex items-center justify-center text-[10px] text-black font-bold"
+                  >
+                    B
+                  </div>
+                  <div
+                    class="size-8 rounded-full bg-slate-600 border-2 border-background-dark flex items-center justify-center text-[10px] text-white font-bold"
+                  >
+                    D
+                  </div>
+                </div>
+                <p>150+ do'kon egalari ishonchini qozongan</p>
+              </div>
+            </div>
+
+            <div
+              class="w-full lg:w-1/2 relative flex justify-center items-center mt-12 lg:mt-0"
+            >
+              <div
+                class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[400px] h-[400px] bg-primary/20 blur-[120px] rounded-full -z-10"
+              ></div>
+
+              <div class="carousel-container" id="phoneCarousel">
+                <div class="carousel-card card-center" data-index="0">
+                  <div
+                    class="absolute top-3 left-1/2 -translate-x-1/2 w-5 h-5 rounded-full bg-[#1e293b] z-20 ring-1 ring-slate-700/50">
+                  </div>
+                  <img src="{% static 'images/1.jpg' %}" class="carousel-img" alt="Screen 1" />
+                </div>
+
+                <div class="carousel-card card-center" data-index="0">
+                  <div
+                    class="absolute top-3 left-1/2 -translate-x-1/2 w-5 h-5 rounded-full bg-[#1e293b] z-20 ring-1 ring-slate-700/50">
+                  </div>
+                  <img src="{% static 'images/4.jpg' %}" class="carousel-img" alt="Screen 1" />
+                </div>
+
+                <div class="carousel-card card-right" data-index="1">
+                  <div
+                    class="absolute top-3 left-1/2 -translate-x-1/2 w-5 h-5 rounded-full bg-[#1e293b] z-20 ring-1 ring-slate-700/50"
+                  ></div>
+                  <img src="{% static 'images/2.jpg' %}" class="carousel-img" alt="Screen 2" />
+                </div>
+
+                <div class="carousel-card card-left" data-index="2">
+                  <div
+                    class="absolute top-3 left-1/2 -translate-x-1/2 w-5 h-5 rounded-full bg-[#1e293b] z-20 ring-1 ring-slate-700/50"
+                  ></div>
+                  <img src="{% static 'images/3.jpg' %}" class="carousel-img" alt="Screen 3" />
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div
+        class="w-full flex justify-center py-20 bg-[#112117] border-y border-border-green"
+        id="features"
+      >
+        <div
+          class="layout-content-container flex flex-col max-w-[1200px] flex-1 px-4 lg:px-8"
+        >
+          <div class="flex flex-col gap-10 md:gap-16">
+            <div class="text-center items-center">
+              <h2
+                class="text-primary font-bold tracking-wider uppercase text-sm mb-3"
+              >
+                Nega QarzDaptar?
+              </h2>
+              <h3
+                class="text-slate-900 dark:text-white text-3xl md:text-4xl font-black leading-tight max-w-[720px] mx-auto"
+              >
+                Eski daftarni <span class="text-primary">aqlli</span> yordamchiga almashtiring.
+              </h3>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+              <div
+                class="group flex flex-col gap-6 rounded-2xl border border-border-green bg-card-dark p-8 hover:bg-[#203c2b] transition-all duration-300 hover:-translate-y-2 hover:shadow-xl hover:shadow-primary/5"
+              >
+                <div
+                  class="size-14 rounded-full bg-border-green group-hover:bg-primary/20 flex items-center justify-center transition-colors"
+                >
+                  <span
+                    class="material-symbols-outlined text-primary text-[32px]"
+                    >notifications_active</span
+                  >
+                </div>
+                <h4 class="text-white text-xl font-bold">Avtomatik SMS</h4>
+                <p class="text-[#93c8a8] text-base">
+                  Qarz yozilganda yoki to'lov bo'lganda mijozga avtomatik xabar
+                  boradi.
+                </p>
+              </div>
+              <div
+                class="group flex flex-col gap-6 rounded-2xl border border-border-green bg-card-dark p-8 hover:bg-[#203c2b] transition-all duration-300 hover:-translate-y-2 hover:shadow-xl hover:shadow-primary/5"
+              >
+                <div
+                  class="size-14 rounded-full bg-border-green group-hover:bg-primary/20 flex items-center justify-center transition-colors"
+                >
+                  <span
+                    class="material-symbols-outlined text-primary text-[32px]"
+                    >calculate</span
+                  >
+                </div>
+                <h4 class="text-white text-xl font-bold">Aniq Hisob-kitob</h4>
+                <p class="text-[#93c8a8] text-base">
+                  Kalkulyatorda soatlab hisoblash shart emas. Jami qarzlar bir
+                  soniyada ko'rinadi.
+                </p>
+              </div>
+              <div
+                class="group flex flex-col gap-6 rounded-2xl border border-border-green bg-card-dark p-8 hover:bg-[#203c2b] transition-all duration-300 hover:-translate-y-2 hover:shadow-xl hover:shadow-primary/5"
+              >
+                <div
+                  class="size-14 rounded-full bg-border-green group-hover:bg-primary/20 flex items-center justify-center transition-colors"
+                >
+                  <span
+                    class="material-symbols-outlined text-primary text-[32px]"
+                    >cloud_sync</span
+                  >
+                </div>
+                <h4 class="text-white text-xl font-bold">Bulutli Xotira</h4>
+                <p class="text-[#93c8a8] text-base">
+                  Telefoningiz yo'qolsa ham ma'lumotlar o'chib ketmaydi.
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="w-full flex justify-center py-20 bg-[#15281e]" id="reviews">
+        <div
+          class="layout-content-container flex flex-col max-w-[1200px] flex-1 px-4 lg:px-8 overflow-hidden"
+        >
+          <div class="flex flex-col gap-8">
+            <div class="flex flex-col gap-2 px-4 text-center md:text-left">
+              <h2
+                class="text-slate-900 dark:text-white text-3xl font-black leading-tight"
+              >
+                Tadbirkorlar Ishonchi
+              </h2>
+              <p class="text-[#93c8a8]">
+                O'zbekistondagi yuzlab do'konlar allaqachon bizga o'tdi.
+              </p>
+            </div>
+
+            <div
+              class="flex overflow-x-auto pb-8 gap-6 px-4 snap-x snap-mandatory hide-scrollbar"
+            >
+              <div
+                class="snap-center shrink-0 w-[300px] md:w-[360px] flex flex-col gap-4 rounded-2xl bg-card-dark p-6 border border-border-green hover:border-primary/50 transition-colors"
+              >
+                <div class="flex items-center gap-4">
+                  <div
+                    class="size-12 rounded-full bg-blue-500 flex items-center justify-center text-white font-bold text-lg"
+                  >
+                    A
+                  </div>
+                  <div>
+                    <p class="text-white font-bold">Akmal Aka</p>
+                    <p class="text-xs text-[#93c8a8]">Oziq-ovqat do'koni</p>
+                  </div>
+                </div>
+                <div class="flex gap-1 text-primary">
+                  <span class="material-symbols-outlined text-[18px]"
+                    >star</span
+                  >
+                  <span class="material-symbols-outlined text-[18px]"
+                    >star</span
+                  >
+                  <span class="material-symbols-outlined text-[18px]"
+                    >star</span
+                  >
+                  <span class="material-symbols-outlined text-[18px]"
+                    >star</span
+                  >
+                  <span class="material-symbols-outlined text-[18px]"
+                    >star</span
+                  >
+                </div>
+                <p class="text-slate-300 text-sm leading-relaxed italic">
+                  "Oldin juma kuni hisob-kitob qilishga 3 soat vaqtim ketardi.
+                  Hozir botga kiraman, jami qarzni ko'raman, bo'ldi. Asabiym ham
+                  tinch."
+                </p>
+              </div>
+
+              <div
+                class="snap-center shrink-0 w-[300px] md:w-[360px] flex flex-col gap-4 rounded-2xl bg-card-dark p-6 border border-border-green hover:border-primary/50 transition-colors"
+              >
+                <div class="flex items-center gap-4">
+                  <div
+                    class="size-12 rounded-full bg-pink-500 flex items-center justify-center text-white font-bold text-lg"
+                  >
+                    M
+                  </div>
+                  <div>
+                    <p class="text-white font-bold">Malika Opa</p>
+                    <p class="text-xs text-[#93c8a8]">Kiyim-kechak butigi</p>
+                  </div>
+                </div>
+                <div class="flex gap-1 text-primary">
+                  <span class="material-symbols-outlined text-[18px]"
+                    >star</span
+                  >
+                  <span class="material-symbols-outlined text-[18px]"
+                    >star</span
+                  >
+                  <span class="material-symbols-outlined text-[18px]"
+                    >star</span
+                  >
+                  <span class="material-symbols-outlined text-[18px]"
+                    >star</span
+                  >
+                  <span class="material-symbols-outlined text-[18px]"
+                    >star_half</span
+                  >
+                </div>
+                <p class="text-slate-300 text-sm leading-relaxed italic">
+                  "Mijozga 'qarzingiz bor' deb telefon qilishga xijolat
+                  bo'lardim. Bot o'zi chiroyli eslatma yuboradi, mijozlar ham
+                  xursand, men ham."
+                </p>
+              </div>
+
+              <div
+                class="snap-center shrink-0 w-[300px] md:w-[360px] flex flex-col gap-4 rounded-2xl bg-card-dark p-6 border border-border-green hover:border-primary/50 transition-colors"
+              >
+                <div class="flex items-center gap-4">
+                  <div
+                    class="size-12 rounded-full bg-yellow-600 flex items-center justify-center text-white font-bold text-lg"
+                  >
+                    S
+                  </div>
+                  <div>
+                    <p class="text-white font-bold">Sardor</p>
+                    <p class="text-xs text-[#93c8a8]">Qurilish mollari</p>
+                  </div>
+                </div>
+                <div class="flex gap-1 text-primary">
+                  <span class="material-symbols-outlined text-[18px]"
+                    >star</span
+                  >
+                  <span class="material-symbols-outlined text-[18px]"
+                    >star</span
+                  >
+                  <span class="material-symbols-outlined text-[18px]"
+                    >star</span
+                  >
+                  <span class="material-symbols-outlined text-[18px]"
+                    >star</span
+                  >
+                  <span class="material-symbols-outlined text-[18px]"
+                    >star</span
+                  >
+                </div>
+                <p class="text-slate-300 text-sm leading-relaxed italic">
+                  "Eng zo'r tarafi — daftarni yo'qotib qo'yishdan qo'rqmayman.
+                  Telefonim o'chsa ham, boshqa telefondan kirib davom
+                  ettiraman."
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="w-full flex justify-center py-20" id="how-it-works">
+        <div
+          class="layout-content-container flex flex-col max-w-[960px] flex-1 px-4 lg:px-8"
+        >
+          <div class="flex flex-col gap-10">
+            <div class="text-center mb-4">
+              <h2
+                class="text-slate-900 dark:text-white text-3xl font-black leading-tight"
+              >
+                30 Soniyada Boshlang
+              </h2>
+            </div>
+            <div
+              class="grid grid-cols-[60px_1fr] md:grid-cols-[80px_1fr] gap-x-4 px-4"
+            >
+              <div class="flex flex-col items-center gap-2 pt-2">
+                <div
+                  class="flex h-12 w-12 items-center justify-center rounded-full bg-primary text-[#112218] shadow-[0_0_15px_rgba(48,232,122,0.4)]"
+                >
+                  <span class="material-symbols-outlined text-[24px]"
+                    >smart_toy</span
+                  >
+                </div>
+                <div
+                  class="w-[2px] bg-gradient-to-b from-primary to-border-green h-full grow min-h-[80px]"
+                ></div>
+              </div>
+              <div class="flex flex-col pb-12 pt-2">
+                <h3
+                  class="text-slate-900 dark:text-white text-xl font-bold mb-2"
+                >
+                  Botga kiring
+                </h3>
+                <p class="text-slate-600 dark:text-[#93c8a8]">
+                  @QarzDaptarBot ga kiring va Start bosing.
+                </p>
+              </div>
+              <div class="flex flex-col items-center gap-2">
+                <div class="w-[2px] bg-border-green h-4"></div>
+                <div
+                  class="flex h-12 w-12 items-center justify-center rounded-full bg-card-dark border border-primary text-primary"
+                >
+                  <span class="material-symbols-outlined text-[24px]"
+                    >person_add</span
+                  >
+                </div>
+                <div
+                  class="w-[2px] bg-gradient-to-b from-border-green to-primary h-full grow min-h-[80px]"
+                ></div>
+              </div>
+              <div class="flex flex-col pb-12 pt-2">
+                <h3
+                  class="text-slate-900 dark:text-white text-xl font-bold mb-2"
+                >
+                  Mijoz qo'shing
+                </h3>
+                <p class="text-slate-600 dark:text-[#93c8a8]">
+                  Ism yozing yoki kontakt yuboring.
+                </p>
+              </div>
+              <div class="flex flex-col items-center gap-2">
+                <div class="w-[2px] bg-primary h-4"></div>
+                <div
+                  class="flex h-12 w-12 items-center justify-center rounded-full bg-white text-[#112218]"
+                >
+                  <span class="material-symbols-outlined text-[24px]"
+                    >receipt_long</span
+                  >
+                </div>
+              </div>
+              <div class="flex flex-col pt-2">
+                <h3
+                  class="text-slate-900 dark:text-white text-xl font-bold mb-2"
+                >
+                  Nasiya yozing
+                </h3>
+                <p class="text-slate-600 dark:text-[#93c8a8]">
+                  "50000 non" deb yozing, bo'ldi.
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="w-full flex justify-center py-20 bg-[#0d1a12]" id="start-now">
+        <div
+          class="layout-content-container flex flex-col max-w-[1200px] flex-1 px-4 lg:px-8"
+        >
+          <div
+            class="rounded-[2.5rem] bg-gradient-to-br from-primary via-[#249655] to-[#1a3224] p-1 shadow-2xl"
+          >
+            <div
+              class="bg-[#112117] rounded-[2.3rem] p-8 md:p-12 flex flex-col lg:flex-row gap-12 items-center relative overflow-hidden"
+            >
+              <div
+                class="absolute inset-0 opacity-20"
+                style="
+                  background-image: radial-gradient(
+                    #30e87a 1px,
+                    transparent 1px
+                  );
+                  background-size: 24px 24px;
+                "
+              ></div>
+
+              <div
+                class="flex-1 flex flex-col gap-6 relative z-10 text-center lg:text-left"
+              >
+                <h2
+                  class="text-white text-3xl md:text-5xl font-black leading-tight tracking-tight"
+                >
+                  Biznesingizni tartibga soling.
+                </h2>
+                <p class="text-gray-300 text-lg font-medium">
+                  Bugunoq o'z do'koningizni yarating. Bepul sinov davri.
+                </p>
+                <div class="flex flex-col gap-4 mt-4 text-left">
+                  <div class="flex items-center gap-3 text-white">
+                    <span class="material-symbols-outlined text-primary"
+                      >check_circle</span
+                    >
+                    <span>Cheksiz mijozlar</span>
+                  </div>
+                  <div class="flex items-center gap-3 text-white">
+                    <span class="material-symbols-outlined text-primary"
+                      >check_circle</span
+                    >
+                    <span>Telegram Bot</span>
+                  </div>
+                  <div class="flex items-center gap-3 text-white">
+                    <span class="material-symbols-outlined text-primary"
+                      >check_circle</span
+                    >
+                    <span>Xavfsiz ma'lumot</span>
+                  </div>
+                </div>
+              </div>
+
+              <div class="w-full lg:w-[450px] relative z-10">
+                <div
+                  class="bg-white/5 backdrop-blur-lg border border-white/10 p-8 rounded-[2rem] shadow-2xl"
+                >
+                  <h3 class="text-2xl font-bold text-white mb-6 text-center">
+                    Do'kon Ochish
+                  </h3>
+                  {% if messages %} {% for message in messages %}
+                  <div
+                    class="p-3 mb-4 text-sm rounded-lg bg-red-500/20 text-red-200 border border-red-500/30"
+                  >
+                    {{ message }}
+                  </div>
+                  {% endfor %} {% endif %}
+                  <form
+                    action="{% url 'signup' %}"
+                    method="POST"
+                    class="flex flex-col gap-4"
+                  >
+                    {% csrf_token %}
+                    <div>
+                      <label
+                        class="block text-primary text-xs font-bold uppercase tracking-wider mb-2 ml-1"
+                        >Do'kon Nomi</label
+                      >
+                      <input
+                        type="text"
+                        name="shop_name"
+                        class="w-full custom-input rounded-xl px-4 py-3"
+                        placeholder="Baraka Market"
+                        required
+                      />
+                    </div>
+                    <div>
+                      <label
+                        class="block text-primary text-xs font-bold uppercase tracking-wider mb-2 ml-1"
+                        >Ismingiz</label
+                      >
+                      <input
+                        type="text"
+                        name="admin_name"
+                        class="w-full custom-input rounded-xl px-4 py-3"
+                        placeholder="Alijon"
+                        required
+                      />
+                    </div>
+                    <div>
+                      <label
+                        class="block text-primary text-xs font-bold uppercase tracking-wider mb-2 ml-1"
+                        >Telegram ID</label
+                      >
+                      <div class="relative">
+                        <input
+                          type="number"
+                          name="telegram_id"
+                          class="w-full custom-input rounded-xl px-4 py-3"
+                          placeholder="998901234567"
+                          required
+                        />
+                        <a
+                          href="https://t.me/userinfobot"
+                          target="_blank"
+                          class="absolute right-3 top-3 text-gray-400 hover:text-white text-xs underline"
+                          >ID olish</a
+                        >
+                      </div>
+                      <p class="text-xs text-gray-500 mt-2 ml-1">
+                        Login sifatida ishlatiladi.
+                      </p>
+                    </div>
+                    <button
+                      type="submit"
+                      class="mt-4 w-full bg-primary hover:bg-green-400 text-[#112218] font-bold py-4 rounded-xl shadow-lg shadow-primary/20 transition-all hover:scale-[1.02]"
+                    >
+                      Ro'yxatdan O'tish
+                    </button>
+                  </form>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <footer
+        class="w-full flex justify-center py-10 bg-[#0d1a12] border-t border-border-green mt-auto"
+      >
+        <div
+          class="layout-content-container flex flex-col max-w-[1200px] flex-1 px-4 lg:px-8"
+        >
+          <div
+            class="flex flex-col md:flex-row justify-between items-center gap-6"
+          >
+            <div class="flex items-center gap-2 text-white">
+              <div class="size-6 text-primary flex items-center justify-center">
+                <span class="material-symbols-outlined text-[24px]"
+                  >account_balance_wallet</span
+                >
+              </div>
+              <h2 class="text-base font-bold leading-tight tracking-tight">
+                Qarz<span class="text-primary">Daptar</span>
+              </h2>
+            </div>
+            <p class="text-slate-500 text-sm">
+              &copy; 2024 QarzDaptar. Barcha huquqlar himoyalangan.
+            </p>
+          </div>
+        </div>
+      </footer>
     </div>
 
-    <div class="w-full flex justify-center py-12 md:py-20 lg:py-24 relative overflow-hidden">
-        <div class="absolute top-0 left-1/2 -translate-x-1/2 w-[600px] h-[600px] bg-primary/10 blur-[120px] rounded-full pointer-events-none"></div>
+    <script>
+      document.addEventListener("DOMContentLoaded", () => {
+        const cards = document.querySelectorAll(".carousel-card");
+        let activeIndex = 0; // 0 - indexdagi rasm markazda boshlanadi
 
-        <div class="layout-content-container flex flex-col max-w-[1200px] flex-1 px-4 lg:px-8 relative z-10">
-            <div class="flex flex-col gap-10 lg:gap-16 lg:flex-row items-center">
+        function updateCarousel() {
+          cards.forEach((card, index) => {
+            // Hamma klasslarni tozalaymiz
+            card.classList.remove("card-left", "card-center", "card-right");
 
-                <div class="flex flex-col gap-6 lg:w-1/2 justify-center text-center lg:text-left">
-                    <div class="flex flex-col gap-4">
-                        <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-border-green bg-card-dark w-fit mx-auto lg:mx-0">
-                            <span class="size-2 rounded-full bg-primary animate-pulse-slow"></span>
-                            <span class="text-xs font-medium text-white/80 uppercase tracking-wider">Telegramda Ishlaydi</span>
-                        </div>
+            // Matematik hisob-kitob (aylanma mantiq)
+            if (index === activeIndex) {
+              card.classList.add("card-center");
+            } else if (index === (activeIndex + 1) % 3) {
+              card.classList.add("card-right");
+            } else {
+              card.classList.add("card-left");
+            }
+          });
 
-                        <h1 class="text-4xl font-black leading-tight tracking-tight md:text-5xl lg:text-6xl text-slate-900 dark:text-white">
-                            Qarz Daftardan<br/>
-                            <span class="text-primary">Voz Keching.</span>
-                        </h1>
+          // Keyingi safar uchun indexni o'zgartiramiz
+          // (0 -> 1 -> 2 -> 0 ...)
+          activeIndex = (activeIndex + 1) % 3;
+        }
 
-                        <h2 class="text-slate-600 dark:text-slate-300 text-lg font-normal leading-relaxed max-w-[540px] mx-auto lg:mx-0">
-                            Mijozlaringiz qarzini to'g'ridan-to'g'ri Telegram orqali boshqaring. Xavfsiz, tez va har doim yoningizda.
-                        </h2>
-                    </div>
+        // Birinchi marta ishga tushirish (to'g'ri joylashtirish uchun)
+        // Buni o'chirib qo'ysangiz ham bo'ladi, chunki HTMLda qo'lda yozilgan
+        // updateCarousel();
 
-                    <div class="flex flex-wrap gap-4 pt-2 justify-center lg:justify-start">
-                        <a href="#start-now" class="flex cursor-pointer items-center justify-center overflow-hidden rounded-full h-12 px-8 bg-primary hover:bg-green-400 transition-colors text-[#112218] text-base font-bold shadow-[0_0_20px_rgba(48,232,122,0.3)] hover:shadow-[0_0_30px_rgba(48,232,122,0.5)]">
-                            <span class="material-symbols-outlined mr-2 text-[20px]">rocket_launch</span>
-                            <span class="truncate">Boshlash</span>
-                        </a>
-                        <a href="https://t.me/QarzDaptarBot" target="_blank" class="flex cursor-pointer items-center justify-center overflow-hidden rounded-full h-12 px-8 bg-card-dark hover:bg-border-green border border-border-green text-white text-base font-bold transition-colors">
-                            <span class="material-symbols-outlined mr-2 text-[20px]">play_circle</span>
-                            <span class="truncate">Botni Ko'rish</span>
-                        </a>
-                    </div>
-
-                    <div class="flex items-center gap-4 pt-4 text-sm text-slate-500 dark:text-slate-400 justify-center lg:justify-start">
-                        <div class="flex -space-x-2">
-                            <div class="size-8 rounded-full bg-slate-700 border-2 border-background-dark flex items-center justify-center text-[10px] text-white font-bold">A</div>
-                            <div class="size-8 rounded-full bg-primary border-2 border-background-dark flex items-center justify-center text-[10px] text-black font-bold">B</div>
-                            <div class="size-8 rounded-full bg-slate-600 border-2 border-background-dark flex items-center justify-center text-[10px] text-white font-bold">D</div>
-                        </div>
-                        <p>150+ do'kon egalari ishonchini qozongan</p>
-                    </div>
-                </div>
-
-                <div class="w-full lg:w-1/2 relative flex justify-center items-center mt-8 lg:mt-0">
-                    <div class="relative z-10 w-full max-w-[380px] aspect-[9/18] bg-slate-900 rounded-[3rem] border-8 border-slate-800 shadow-2xl overflow-hidden flex flex-col">
-                        <div class="bg-[#262626] p-4 flex items-center gap-3 border-b border-[#333]">
-                            <span class="material-symbols-outlined text-white cursor-pointer">arrow_back</span>
-                            <div class="flex items-center gap-3">
-                                <div class="size-10 rounded-full bg-primary flex items-center justify-center text-[#112218] font-bold">QD</div>
-                                <div>
-                                    <div class="text-white font-semibold">QarzDaptar Bot</div>
-                                    <div class="text-primary text-xs">bot</div>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="flex-1 bg-[#0f0f0f] p-4 flex flex-col gap-4 overflow-hidden relative" style="background-image: url('https://web.telegram.org/img/bg_0.png'); background-size: cover;">
-                            <div class="self-start bg-[#262626] text-white p-3 rounded-2xl rounded-tl-none max-w-[85%] text-sm shadow-md border border-[#333]">
-                                Assalomu alaykum! 👋 Bugun nima qilamiz?
-                                <div class="text-[10px] text-gray-400 text-right mt-1">10:00</div>
-                            </div>
-                            <div class="self-end bg-primary text-[#112218] p-3 rounded-2xl rounded-tr-none max-w-[85%] text-sm shadow-md font-medium">
-                                Alijon, 45,000 so'm, un va yog' uchun
-                                <div class="text-[10px] text-[#112218]/70 text-right mt-1">10:02</div>
-                            </div>
-                            <div class="self-start bg-[#262626] text-white p-3 rounded-2xl rounded-tl-none max-w-[85%] text-sm shadow-md border border-[#333]">
-                                ✅ <b>Nasiya Yozildi!</b><br/><br/>
-                                👤 Mijoz: <b>Alijon</b><br/>
-                                💰 Summa: <b>45,000 so'm</b><br/>
-                                🛒 Tovar: un va yog' uchun<br/>
-                                📉 Jami qarz: <b>120,000 so'm</b>
-                                <div class="mt-3 flex gap-2 flex-wrap">
-                                    <button class="bg-[#333] hover:bg-[#444] py-1 px-3 rounded text-xs transition border border-[#444]">Tarix</button>
-                                    <button class="bg-[#333] hover:bg-[#444] py-1 px-3 rounded text-xs transition border border-[#444]">Eslatma</button>
-                                </div>
-                                <div class="text-[10px] text-gray-400 text-right mt-1">10:02</div>
-                            </div>
-                            <div class="absolute bottom-4 left-4 right-4 bg-slate-800/95 backdrop-blur border border-slate-700 p-3 rounded-xl flex gap-3 items-center shadow-xl animate-bounce cursor-pointer">
-                                <div class="bg-primary/20 p-2 rounded-full text-primary">
-                                    <span class="material-symbols-outlined text-[20px]">notifications_active</span>
-                                </div>
-                                <div class="text-xs text-white">
-                                    <span class="font-bold block text-primary">Yangi To'lov</span>
-                                    Alijon 50,000 so'm to'ladi.
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <div class="w-full flex justify-center py-20 bg-[#112117] border-y border-border-green" id="features">
-        <div class="layout-content-container flex flex-col max-w-[1200px] flex-1 px-4 lg:px-8">
-            <div class="flex flex-col gap-10 md:gap-16">
-                <div class="text-center items-center">
-                    <h2 class="text-primary font-bold tracking-wider uppercase text-sm mb-3">Nega QarzDaptar?</h2>
-                    <h3 class="text-slate-900 dark:text-white text-3xl md:text-4xl font-black leading-tight max-w-[720px] mx-auto">
-                        Eski daftarni aqlli yordamchiga almashtiring.
-                    </h3>
-                </div>
-
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-                    <div class="group flex flex-col gap-6 rounded-2xl border border-border-green bg-card-dark p-8 hover:bg-[#203c2b] transition-all duration-300 hover:-translate-y-2 hover:shadow-xl hover:shadow-primary/5">
-                        <div class="size-14 rounded-full bg-border-green group-hover:bg-primary/20 flex items-center justify-center transition-colors">
-                            <span class="material-symbols-outlined text-primary text-[32px]">notifications_active</span>
-                        </div>
-                        <h4 class="text-white text-xl font-bold">Avtomatik SMS</h4>
-                        <p class="text-[#93c8a8] text-base">Qarz yozilganda yoki to'lov bo'lganda mijozga avtomatik xabar boradi.</p>
-                    </div>
-                    <div class="group flex flex-col gap-6 rounded-2xl border border-border-green bg-card-dark p-8 hover:bg-[#203c2b] transition-all duration-300 hover:-translate-y-2 hover:shadow-xl hover:shadow-primary/5">
-                        <div class="size-14 rounded-full bg-border-green group-hover:bg-primary/20 flex items-center justify-center transition-colors">
-                            <span class="material-symbols-outlined text-primary text-[32px]">calculate</span>
-                        </div>
-                        <h4 class="text-white text-xl font-bold">Aniq Hisob-kitob</h4>
-                        <p class="text-[#93c8a8] text-base">Kalkulyatorda soatlab hisoblash shart emas. Jami qarzlar bir soniyada ko'rinadi.</p>
-                    </div>
-                    <div class="group flex flex-col gap-6 rounded-2xl border border-border-green bg-card-dark p-8 hover:bg-[#203c2b] transition-all duration-300 hover:-translate-y-2 hover:shadow-xl hover:shadow-primary/5">
-                        <div class="size-14 rounded-full bg-border-green group-hover:bg-primary/20 flex items-center justify-center transition-colors">
-                            <span class="material-symbols-outlined text-primary text-[32px]">cloud_sync</span>
-                        </div>
-                        <h4 class="text-white text-xl font-bold">Bulutli Xotira</h4>
-                        <p class="text-[#93c8a8] text-base">Telefoningiz yo'qolsa ham ma'lumotlar o'chib ketmaydi.</p>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <div class="w-full flex justify-center py-20 bg-[#15281e]" id="reviews">
-        <div class="layout-content-container flex flex-col max-w-[1200px] flex-1 px-4 lg:px-8 overflow-hidden">
-            <div class="flex flex-col gap-8">
-                <div class="flex flex-col gap-2 px-4 text-center md:text-left">
-                    <h2 class="text-slate-900 dark:text-white text-3xl font-black leading-tight">Tadbirkorlar Ishonchi</h2>
-                    <p class="text-[#93c8a8]">O'zbekistondagi yuzlab do'konlar allaqachon bizga o'tdi.</p>
-                </div>
-
-                <div class="flex overflow-x-auto pb-8 gap-6 px-4 snap-x snap-mandatory hide-scrollbar">
-
-                    <div class="snap-center shrink-0 w-[300px] md:w-[360px] flex flex-col gap-4 rounded-2xl bg-card-dark p-6 border border-border-green hover:border-primary/50 transition-colors">
-                        <div class="flex items-center gap-4">
-                            <div class="size-12 rounded-full bg-blue-500 flex items-center justify-center text-white font-bold text-lg">A</div>
-                            <div>
-                                <p class="text-white font-bold">Akmal Aka</p>
-                                <p class="text-xs text-[#93c8a8]">Oziq-ovqat do'koni</p>
-                            </div>
-                        </div>
-                        <div class="flex gap-1 text-primary">
-                            <span class="material-symbols-outlined text-[18px]">star</span>
-                            <span class="material-symbols-outlined text-[18px]">star</span>
-                            <span class="material-symbols-outlined text-[18px]">star</span>
-                            <span class="material-symbols-outlined text-[18px]">star</span>
-                            <span class="material-symbols-outlined text-[18px]">star</span>
-                        </div>
-                        <p class="text-slate-300 text-sm leading-relaxed italic">
-                            "Oldin juma kuni hisob-kitob qilishga 3 soat vaqtim ketardi. Hozir botga kiraman, jami qarzni ko'raman, bo'ldi. Asabiym ham tinch."
-                        </p>
-                    </div>
-
-                    <div class="snap-center shrink-0 w-[300px] md:w-[360px] flex flex-col gap-4 rounded-2xl bg-card-dark p-6 border border-border-green hover:border-primary/50 transition-colors">
-                        <div class="flex items-center gap-4">
-                            <div class="size-12 rounded-full bg-pink-500 flex items-center justify-center text-white font-bold text-lg">M</div>
-                            <div>
-                                <p class="text-white font-bold">Malika Opa</p>
-                                <p class="text-xs text-[#93c8a8]">Kiyim-kechak butigi</p>
-                            </div>
-                        </div>
-                        <div class="flex gap-1 text-primary">
-                            <span class="material-symbols-outlined text-[18px]">star</span>
-                            <span class="material-symbols-outlined text-[18px]">star</span>
-                            <span class="material-symbols-outlined text-[18px]">star</span>
-                            <span class="material-symbols-outlined text-[18px]">star</span>
-                            <span class="material-symbols-outlined text-[18px]">star_half</span>
-                        </div>
-                        <p class="text-slate-300 text-sm leading-relaxed italic">
-                            "Mijozga 'qarzingiz bor' deb telefon qilishga xijolat bo'lardim. Bot o'zi chiroyli eslatma yuboradi, mijozlar ham xursand, men ham."
-                        </p>
-                    </div>
-
-                    <div class="snap-center shrink-0 w-[300px] md:w-[360px] flex flex-col gap-4 rounded-2xl bg-card-dark p-6 border border-border-green hover:border-primary/50 transition-colors">
-                        <div class="flex items-center gap-4">
-                            <div class="size-12 rounded-full bg-yellow-600 flex items-center justify-center text-white font-bold text-lg">S</div>
-                            <div>
-                                <p class="text-white font-bold">Sardor</p>
-                                <p class="text-xs text-[#93c8a8]">Qurilish mollari</p>
-                            </div>
-                        </div>
-                        <div class="flex gap-1 text-primary">
-                            <span class="material-symbols-outlined text-[18px]">star</span>
-                            <span class="material-symbols-outlined text-[18px]">star</span>
-                            <span class="material-symbols-outlined text-[18px]">star</span>
-                            <span class="material-symbols-outlined text-[18px]">star</span>
-                            <span class="material-symbols-outlined text-[18px]">star</span>
-                        </div>
-                        <p class="text-slate-300 text-sm leading-relaxed italic">
-                            "Eng zo'r tarafi — daftarni yo'qotib qo'yishdan qo'rqmayman. Telefonim o'chsa ham, boshqa telefondan kirib davom ettiraman."
-                        </p>
-                    </div>
-
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <div class="w-full flex justify-center py-20" id="how-it-works">
-        <div class="layout-content-container flex flex-col max-w-[960px] flex-1 px-4 lg:px-8">
-            <div class="flex flex-col gap-10">
-                <div class="text-center mb-4">
-                    <h2 class="text-slate-900 dark:text-white text-3xl font-black leading-tight">30 Soniyada Boshlang</h2>
-                </div>
-                <div class="grid grid-cols-[60px_1fr] md:grid-cols-[80px_1fr] gap-x-4 px-4">
-                    <div class="flex flex-col items-center gap-2 pt-2">
-                        <div class="flex h-12 w-12 items-center justify-center rounded-full bg-primary text-[#112218] shadow-[0_0_15px_rgba(48,232,122,0.4)]">
-                            <span class="material-symbols-outlined text-[24px]">smart_toy</span>
-                        </div>
-                        <div class="w-[2px] bg-gradient-to-b from-primary to-border-green h-full grow min-h-[80px]"></div>
-                    </div>
-                    <div class="flex flex-col pb-12 pt-2">
-                        <h3 class="text-slate-900 dark:text-white text-xl font-bold mb-2">Botga kiring</h3>
-                        <p class="text-slate-600 dark:text-[#93c8a8]">@QarzDaptarBot ga kiring va Start bosing.</p>
-                    </div>
-                    <div class="flex flex-col items-center gap-2">
-                        <div class="w-[2px] bg-border-green h-4"></div>
-                        <div class="flex h-12 w-12 items-center justify-center rounded-full bg-card-dark border border-primary text-primary">
-                            <span class="material-symbols-outlined text-[24px]">person_add</span>
-                        </div>
-                        <div class="w-[2px] bg-gradient-to-b from-border-green to-primary h-full grow min-h-[80px]"></div>
-                    </div>
-                    <div class="flex flex-col pb-12 pt-2">
-                        <h3 class="text-slate-900 dark:text-white text-xl font-bold mb-2">Mijoz qo'shing</h3>
-                        <p class="text-slate-600 dark:text-[#93c8a8]">Ism yozing yoki kontakt yuboring.</p>
-                    </div>
-                    <div class="flex flex-col items-center gap-2">
-                        <div class="w-[2px] bg-primary h-4"></div>
-                        <div class="flex h-12 w-12 items-center justify-center rounded-full bg-white text-[#112218]">
-                            <span class="material-symbols-outlined text-[24px]">receipt_long</span>
-                        </div>
-                    </div>
-                    <div class="flex flex-col pt-2">
-                        <h3 class="text-slate-900 dark:text-white text-xl font-bold mb-2">Nasiya yozing</h3>
-                        <p class="text-slate-600 dark:text-[#93c8a8]">"50000 non" deb yozing, bo'ldi.</p>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <div class="w-full flex justify-center py-20 bg-[#0d1a12]" id="start-now">
-        <div class="layout-content-container flex flex-col max-w-[1200px] flex-1 px-4 lg:px-8">
-            <div class="rounded-[2.5rem] bg-gradient-to-br from-primary via-[#249655] to-[#1a3224] p-1 shadow-2xl">
-                <div class="bg-[#112117] rounded-[2.3rem] p-8 md:p-12 flex flex-col lg:flex-row gap-12 items-center relative overflow-hidden">
-                    <div class="absolute inset-0 opacity-20" style="background-image: radial-gradient(#30e87a 1px, transparent 1px); background-size: 24px 24px;"></div>
-
-                    <div class="flex-1 flex flex-col gap-6 relative z-10 text-center lg:text-left">
-                        <h2 class="text-white text-3xl md:text-5xl font-black leading-tight tracking-tight">
-                            Biznesingizni tartibga soling.
-                        </h2>
-                        <p class="text-gray-300 text-lg font-medium">
-                            Bugunoq o'z do'koningizni yarating. Bepul sinov davri.
-                        </p>
-                        <div class="flex flex-col gap-4 mt-4 text-left">
-                            <div class="flex items-center gap-3 text-white"><span class="material-symbols-outlined text-primary">check_circle</span><span>Cheksiz mijozlar</span></div>
-                            <div class="flex items-center gap-3 text-white"><span class="material-symbols-outlined text-primary">check_circle</span><span>Telegram Bot</span></div>
-                            <div class="flex items-center gap-3 text-white"><span class="material-symbols-outlined text-primary">check_circle</span><span>Xavfsiz ma'lumot</span></div>
-                        </div>
-                    </div>
-
-                    <div class="w-full lg:w-[450px] relative z-10">
-                        <div class="bg-white/5 backdrop-blur-lg border border-white/10 p-8 rounded-[2rem] shadow-2xl">
-                            <h3 class="text-2xl font-bold text-white mb-6 text-center">Do'kon Ochish</h3>
-                            {% if messages %}
-                                {% for message in messages %}
-                                    <div class="p-3 mb-4 text-sm rounded-lg bg-red-500/20 text-red-200 border border-red-500/30">{{ message }}</div>
-                                {% endfor %}
-                            {% endif %}
-                            <form action="{% url 'signup' %}" method="POST" class="flex flex-col gap-4">
-                                {% csrf_token %}
-                                <div>
-                                    <label class="block text-primary text-xs font-bold uppercase tracking-wider mb-2 ml-1">Do'kon Nomi</label>
-                                    <input type="text" name="shop_name" class="w-full custom-input rounded-xl px-4 py-3" placeholder="Baraka Market" required>
-                                </div>
-                                <div>
-                                    <label class="block text-primary text-xs font-bold uppercase tracking-wider mb-2 ml-1">Ismingiz</label>
-                                    <input type="text" name="admin_name" class="w-full custom-input rounded-xl px-4 py-3" placeholder="Alijon" required>
-                                </div>
-                                <div>
-                                    <label class="block text-primary text-xs font-bold uppercase tracking-wider mb-2 ml-1">Telegram ID</label>
-                                    <div class="relative">
-                                        <input type="number" name="telegram_id" class="w-full custom-input rounded-xl px-4 py-3" placeholder="998901234567" required>
-                                        <a href="https://t.me/userinfobot" target="_blank" class="absolute right-3 top-3 text-gray-400 hover:text-white text-xs underline">ID olish</a>
-                                    </div>
-                                    <p class="text-xs text-gray-500 mt-2 ml-1">Login sifatida ishlatiladi.</p>
-                                </div>
-                                <button type="submit" class="mt-4 w-full bg-primary hover:bg-green-400 text-[#112218] font-bold py-4 rounded-xl shadow-lg shadow-primary/20 transition-all hover:scale-[1.02]">
-                                    Ro'yxatdan O'tish
-                                </button>
-                            </form>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <footer class="w-full flex justify-center py-10 bg-[#0d1a12] border-t border-border-green mt-auto">
-        <div class="layout-content-container flex flex-col max-w-[1200px] flex-1 px-4 lg:px-8">
-            <div class="flex flex-col md:flex-row justify-between items-center gap-6">
-                <div class="flex items-center gap-2 text-white">
-                    <div class="size-6 text-primary flex items-center justify-center">
-                        <span class="material-symbols-outlined text-[24px]">account_balance_wallet</span>
-                    </div>
-                    <h2 class="text-lg font-bold">QarzDaptar</h2>
-                </div>
-                <div class="text-[#5b7c69] text-sm">© 2025 QarzDaptar. Uchqo'rg'on IT School.</div>
-            </div>
-        </div>
-    </footer>
-</div>
-</body>
+        // Har 4.5 soniyada almashadi (sekinroq, tushunarli bo'lishi uchun)
+        setInterval(updateCarousel, 3000);
+      });
+    </script>
+  </body>
 </html>

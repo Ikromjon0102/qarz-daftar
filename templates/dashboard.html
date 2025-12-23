@@ -5,23 +5,23 @@
 
 {% block content %}
 
-<h6 class="text-muted small text-uppercase fw-bold mb-2 ps-1">📊 Bu oylik ko'rsatkichlar</h6>
+<h6 class="text-muted small text-uppercase fw-bold mb-2 ps-1 text-dark">📊 Bu oylik ko'rsatkichlar</h6>
 
 <div class="row g-2 mb-2">
     <div class="col-12">
         <span class="badge bg-primary bg-opacity-10 text-primary border border-primary border-opacity-10">
             📦 Nasiyaga sotildi (Tovar)
-        </span> | <span class="badge bg-light text-dark border">{{ clients|length }} ta mijoz</span>
+        </span> | <span class="badge  text-dark border ">{{ clients|length }} ta mijoz</span>
     </div>
     <div class="col-6">
         <div class="p-3 bg-white rounded-3 shadow-sm border border-primary border-opacity-10">
-            <small class="text-muted d-block" style="font-size: 0.7rem;">So'mda</small>
+            <small class="text-muted d-block text-dark" style="font-size: 0.7rem;">So'mda</small>
             <h5 class="fw-bold text-dark mb-0">{{ stats.sales_uzs|floatformat:0 }}</h5>
         </div>
     </div>
     <div class="col-6">
         <div class="p-3 bg-white rounded-3 shadow-sm border border-primary border-opacity-10">
-            <small class="text-muted d-block" style="font-size: 0.7rem;">Dollarda</small>
+            <small class="text-muted d-block text-dark" style="font-size: 0.7rem;">Dollarda</small>
             <h5 class="fw-bold text-dark mb-0">${{ stats.sales_usd|floatformat:0 }}</h5>
         </div>
     </div>
@@ -29,7 +29,7 @@
 
 <div class="row g-2 mb-4">
     <div class="col-12">
-        <span class="badge bg-success bg-opacity-10 text-success border border-success border-opacity-10">
+        <span class="badge bg-success text-dark bg-opacity-10 text-success border border-success border-opacity-10">
             💰 Undirildi (Naqd pul)
         </span>
     </div>
@@ -51,7 +51,7 @@
 
 <hr class="text-muted opacity-25">
 
-<h6 class="text-muted small text-uppercase fw-bold mb-3 ps-1">👤 Mijozlar balansi</h6>
+<h6 class="text-muted small text-uppercase fw-bold mb-3 ps-1 text-dark">👤 Mijozlar balansi</h6>
 
 <div class="pb-5"> {% for client in clients %}
     <div class="col-12 mb-2">
@@ -60,7 +60,7 @@
             onclick="location.href=this.getAttribute('data-url')">
             <div>
                 <h6 class="fw-bold mb-1 text-dark">{{ client.full_name }}</h6>
-                <small class="text-muted"><i class="fa-solid fa-phone" style="font-size: 0.7rem;"></i>
+                <small class="text-muted text-dark"><i class="fa-solid fa-phone" style="font-size: 0.7rem;"></i>
                     {{ client.phone }}</small>
             </div>
 
@@ -97,7 +97,7 @@
 </div>
 </div>
 {% empty %}
-<div class="text-center py-5 text-muted">
+<div class="text-center py-5 text-muted text-dark">
     <i class="fa-solid fa-users-slash fa-2x mb-3 opacity-25"></i>
     <p>Mijozlar yo'q</p>
 </div>

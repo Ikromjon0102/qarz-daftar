@@ -1,47 +1,10 @@
 {% extends 'base.html' %}
 {% block matn %}
-<h3 class="fw-bold m-0 text-primary"><i class="fas fa-receipt"></i>  Nasiya Yozish</h3>
+<h3 class="fw-bold m-0 text-primary "><i class="fas fa-receipt"></i>  Nasiya Yozish</h3>
 {% endblock %}
 
 {% block content %}
 <style>
-    /* Dark Mode Fix */
-    body {
-        background-color: var(--tg-theme-bg-color, #fff);
-        color: var(--tg-theme-text-color, #000);
-    }
-
-    .form-control,
-    .form-select {
-        background-color: var(--tg-theme-secondary-bg-color, #f0f0f0) !important;
-        color: var(--tg-theme-text-color, #000) !important;
-        border: 1px solid var(--tg-theme-hint-color, #ccc);
-        border-radius: 12px;
-    }
-
-    .form-control:focus,
-    .form-select:focus {
-        background-color: var(--tg-theme-bg-color, #fff) !important;
-        border-color: var(--tg-theme-button-color, #3390ec);
-        box-shadow: none;
-    }
-
-    .app-card {
-        background-color: var(--tg-theme-secondary-bg-color, #ffffff);
-        border-radius: 14px;
-        padding: 15px;
-        margin-bottom: 15px;
-        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
-    }
-
-    .summary-card {
-        background-color: var(--tg-theme-bg-color);
-        border: 2px dashed var(--tg-theme-button-color);
-        border-radius: 14px;
-        padding: 15px;
-        margin-top: 20px;
-    }
-
     .btn-trash {
         color: #ff5c5c;
         background: transparent;
@@ -53,9 +16,9 @@
     {% csrf_token %}
 
     <div class="app-card">
-        <label class="small text-muted mb-1">Mijozni tanlang yoki yozing</label>
+        <label class="small text-muted mb-1 text-dark">Mijozni tanlang yoki yozing</label>
 
-        <input class="form-control form-control-lg fw-bold text-primary" list="clientOptions" id="clientDataList"
+        <input class="form-control form-control-lg fw-bold text-primary text-dark" list="clientOptions" id="clientDataList"
             placeholder="Ismni yozing..." onchange="setClientId(this)"
             value="{% if selected_client %}{{ selected_client.full_name }} ({{ selected_client.phone }}){% endif %}"
             required>
@@ -131,11 +94,11 @@
         const html = `
         <div class="app-card item-row animate__animated animate__fadeIn position-relative">
             <div class="d-flex justify-content-between align-items-center mb-2">
-                <span class="fw-bold small text-muted">Tovar #${count}</span>
+                <span class="fw-bold small text-muted text-dark">Tovar #${count}</span>
                 <button type="button" class="btn-trash p-0" onclick="removeRow(this)"><i class="fa-solid fa-trash"></i></button>
             </div>
             <div class="mb-2">
-                <input type="text" name="item_name[]" class="form-control fw-bold" placeholder="Nomi (mas: Fara)" required>
+                <input type="text" name="item_name[]" class="form-control fw-bold" placeholder="Mahsulot nomi" required>
             </div>
             <div class="row g-2">
                 <div class="col-4">

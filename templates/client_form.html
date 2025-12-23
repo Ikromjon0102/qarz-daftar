@@ -1,21 +1,21 @@
 {% extends 'base.html' %}
 
-{% block content %}
-<h4 class="mb-4 fw-bold ps-1">
-    {% if client %} <i class="fa-solid fa-user-pen"></i> Tahrirlash {% else %} <i class="fa-solid fa-user-plus"></i> Yangi Mijoz {% endif %}
-</h4>
+{% block matn %}
+<h5 class="fw-bold m-0">{% if client %} <i class="fa-solid fa-user-pen"></i> Tahrirlash {% else %} <i class="fa-solid fa-user-plus"></i> Yangi Mijoz {% endif %}</h5>
+{% endblock %}
 
+{% block content %}
 <form method="POST" autocomplete="off">
     {% csrf_token %}
     
-    <div class="app-card bg-white mb-4 shadow-sm">
-        <div class="mb-3">
-            <label class="form-label text-muted small text-uppercase fw-bold">F.I.SH</label>
-            <input type="text" name="full_name" class="form-control fw-bold" placeholder="Mijoz ismi" value="{{ client.full_name|default:'' }}" required>
+    <div class="app-card bg-white mb-4 shadow-sm ">
+        <div class="mb-3 text-dark">
+            <label class="form-label text-muted small text-uppercase fw-bold text-dark">F.I.SH</label>
+            <input type="text" name="full_name" class="form-control fw-bold text-dark" placeholder="Mijoz ismi" value="{{ client.full_name|default:'' }}" required>
         </div>
         
         <div class="mb-0">
-            <label class="form-label text-muted small text-uppercase fw-bold">Telefon</label>
+            <label class="form-label text-muted small text-uppercase fw-bold text-dark">Telefon</label>
             <input type="tel" name="phone" class="form-control fw-bold" placeholder="+998..." value="{{ client.phone|default:'' }}" required>
         </div>
     </div>

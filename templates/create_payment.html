@@ -42,13 +42,13 @@
 
     <div class="app-card border border-success border-opacity-25 shadow-sm mb-4 bg-white"
         style="border-radius: 14px; padding: 15px;">
-        <label class="small text-muted mb-2 text-uppercase fw-bold">Kim to'layapti?</label>
+        <label class="small text-muted mb-2 text-uppercase fw-bold text-dark">Kim to'layapti?</label>
 
         <div class="input-group input-group-lg">
             <span class="input-group-text bg-transparent border-end-0 ps-0">
                 <i class="fa-solid fa-user text-success"></i>
             </span>
-            <input class="form-control bg-transparent border-start-0 ps-2 fw-bold text-success" list="clientOptions"
+            <input class="form-control bg-transparent border-start-0 ps-2 fw-bold text-success text-dark" list="clientOptions"
                 id="clientDataList" placeholder="Mijoz ismini yozing..." onchange="setClientId(this)"
                 value="{% if selected_client %}{{ selected_client.full_name }} ({{ selected_client.phone }}){% endif %}"
                 required>
@@ -66,8 +66,8 @@
 </datalist>
     </div>
 
-    <div class="app-card mb-4 bg-white" style="border-radius: 14px; padding: 15px;">
-        <label class="small text-muted mb-3 text-uppercase fw-bold">Qancha to'ladi?</label>
+    <div class="app-card mb-4 bg-white text-dark" style="border-radius: 14px; padding: 15px;">
+        <label class="small text-muted mb-3 text-uppercase fw-bold text-dark">Qancha to'ladi?</label>
 
         <div class="input-group mb-3">
             <span class="input-group-text">UZS</span>
@@ -80,8 +80,8 @@
             <input type="tel" name="amount_usd" class="form-control money-input text-success" placeholder="0">
             <span class="input-group-text">$</span>
         </div>
-<div class="mb-3">
-    <label class="form-label fw-bold text-muted">To'lov turi</label>
+<div class="mb-3 text-dark">
+    <label class="form-label fw-bold text-muted text-dark">To'lov turi</label>
     <div class="d-flex gap-2">
         <input type="radio" class="btn-check" name="payment_method" id="method1" value="cash" checked>
         <label class="btn btn-outline-success flex-fill" for="method1">
@@ -99,8 +99,8 @@
         </label>
     </div>
 </div>
-        <div class="form-text mt-2 text-muted small">
-            <i class="fa-solid fa-circle-info"></i> Qaysi valyutada to'lasa, o'shani to'ldiring.
+        <div class="form-text mt-2 text-muted small text-dark">
+            <i class="fa-solid fa-circle-info "></i> Qaysi valyutada to'lasa, o'shani to'ldiring.
         </div>
     </div>
 

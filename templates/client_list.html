@@ -1,11 +1,12 @@
 {% extends 'base.html' %}
 
+{% block matn %}
+    <h4 class="fw-bold ps-1 m-0"><i class="fa-solid fa-users"></i> Mijozlar</h4>
+{% endblock %}
+
 {% block content %}
 <div class="d-flex justify-content-between align-items-center mb-3">
-    <h4 class="fw-bold ps-1 m-0"><i class="fa-solid fa-users"></i> Mijozlar</h4>
-    <a href="{% url 'client_add' %}" class="btn btn-primary btn-sm rounded-pill px-3">
-        <i class="fa-solid fa-plus"></i> Qo'shish
-    </a>
+
 </div>
 
 <form method="GET" class="mb-3">
@@ -17,20 +18,19 @@
 
 <div class="pb-5">
     {% for client in clients %}
-    <div class="app-card d-flex justify-content-between align-items-center py-3 px-3 mb-2 shadow-sm bg-white rounded-3 border-0"
+    <div class="app-card d-flex justify-content-between align-items-center py-3 px-3 mb-2 shadow-sm bg-white rounded-3 border-0 text-dark"
          style="cursor: pointer;"
          onclick="location.href='{% url 'client_edit' client.id %}'">
-        
         <div>
             <h6 class="fw-bold mb-0 text-dark">{{ client.full_name }}</h6>
-            <small class="text-muted">{{ client.phone }}</small>
+            <small class="text-muted text-dark">{{ client.phone }}</small>
         </div>
 
         <div class="d-flex align-items-center">
             {% if client.telegram_id %}
-                <span class="badge bg-success bg-opacity-10 text-success me-2"><i class="fa-brands fa-telegram"></i> Ulangan</span>
+                <span class="badge bg-success bg-opacity-10 text-success me-2 text-dark"><i class="fa-brands fa-telegram text-dark"></i> Ulangan</span>
             {% else %}
-                <span class="badge bg-secondary bg-opacity-10 text-muted me-2"><i class="fa-solid fa-link-slash"></i> Yo'q</span>
+                <span class="badge bg-secondary bg-opacity-10 text-muted me-2 text-dark"><i class="fa-solid fa-link-slash text-dark"></i> Yo'q</span>
             {% endif %}
             
             <i class="fa-solid fa-chevron-right text-muted small"></i>
@@ -38,7 +38,7 @@
 
     </div>
     {% empty %}
-        <p class="text-center text-muted mt-5">Mijozlar topilmadi</p>
+        <p class="text-center text-muted mt-5 text-dark">Mijozlar topilmadi</p>
     {% endfor %}
 </div>
 {% endblock %}

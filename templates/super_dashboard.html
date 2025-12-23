@@ -1,0 +1,113 @@
+{% extends 'base.html' %}
+{% load humanize %}
+
+{% block content %}
+<div class="container-fluid py-4">
+
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2 class="fw-bold text-dark"><i class="fa-solid fa-user-secret me-2"></i>Boshqaruv Markazi</h2>
+        <span class="badge bg-dark p-2">Super Admin</span>
+    </div>
+
+    <div class="row g-3 mb-5">
+        <div class="col-md-4">
+            <div class="card border-0 shadow-sm bg-primary text-white h-100">
+                <div class="card-body">
+                    <h6 class="opacity-75">Jami Do'konlar</h6>
+                    <h2 class="fw-bold display-6">{{ total_shops }}</h2>
+                    <div class="small mt-2">
+                        <i class="fa-solid fa-circle-check text-warning"></i> {{ active_shops }} faol
+                        |
+                        <i class="fa-solid fa-circle-xmark text-danger opacity-50"></i> {{ inactive_shops }} nofaol
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <div class="card border-0 shadow-sm bg-success text-white h-100">
+                <div class="card-body">
+                    <h6 class="opacity-75">Platforma Aylanmasi (Nasiya)</h6>
+                    <h2 class="fw-bold display-6">{{ global_turnover|intcomma }} so'm</h2>
+                    <p class="small mb-0 opacity-75">Barcha do'konlardagi umumiy qarzlar summasi</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <div class="card border-0 shadow-sm bg-dark text-white h-100">
+                <div class="card-body">
+                    <h6 class="opacity-75">Server Status</h6>
+                    <div class="d-flex align-items-center mt-3">
+                        <div class="spinner-grow text-success me-2" role="status" style="width: 1rem; height: 1rem;"></div>
+                        <h4 class="mb-0">Online</h4>
+                    </div>
+                    <p class="small mt-2 text-muted">IP: 164.90.162.22</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <h5 class="fw-bold mb-3 text-secondary">Do'konlar Ro'yxati</h5>
+    <div class="card border-0 shadow-sm rounded-4 overflow-hidden">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead class="bg-light">
+                    <tr>
+                        <th class="py-3 ps-4">Do'kon Nomi</th>
+                        <th>Egasi</th>
+                        <th>Mijozlar</th>
+                        <th>Savdo (Nasiya)</th>
+                        <th>To'lovlar</th>
+                        <th>Holati</th>
+                        <th>Amallar</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for shop in shops %}
+                    <tr>
+                        <td class="ps-4 fw-bold">
+                            <i class="fa-solid fa-store text-muted me-2"></i> {{ shop.name }}
+                        </td>
+                        <td>
+                            <div class="d-flex flex-column">
+                                <span class="fw-bold text-dark">{{ shop.owner.first_name }}</span>
+                                <span class="text-muted small">{{ shop.owner.username }}</span>
+                            </div>
+                        </td>
+                        <td>
+                            <span class="badge bg-info bg-opacity-10 text-primary border border-primary border-opacity-25 rounded-pill">
+                                <i class="fa-solid fa-users me-1"></i> {{ shop.client_count }}
+                            </span>
+                        </td>
+                        <td class="text-danger fw-bold">
+                            {{ shop.total_debt_uzs|default:0|intcomma }}
+                        </td>
+                        <td class="text-success fw-bold">
+                            {{ shop.total_payment_uzs|default:0|intcomma }}
+                        </td>
+                        <td>
+                            {% if shop.is_active %}
+                                <span class="badge bg-success">Active</span>
+                            {% else %}
+                                <span class="badge bg-danger">Blocked</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <a href="/admin/core/shop/{{ shop.id }}/change/" target="_blank" class="btn btn-sm btn-light border text-muted">
+                                <i class="fa-solid fa-gear"></i>
+                            </a>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="7" class="text-center py-5 text-muted">Do'konlar yo'q</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+</div>
+{% endblock %}
