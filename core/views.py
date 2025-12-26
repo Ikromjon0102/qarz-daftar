@@ -80,7 +80,8 @@ def telegram_auth_view(request):
                 return JsonResponse({'status': 'ok', 'redirect_url': '/'})
 
             # 2. PLATFORMA EGASI (Superuser)
-            if telegram_id in settings.ALLOWED_ADMIN_IDS:
+            admins = AllowedAdmin.objects.filter(telegram_id=telegram_id)
+            if telegram_id in admins:
                 superuser = User.objects.filter(is_superuser=True).first()
                 if superuser:
                     login(request, superuser)
